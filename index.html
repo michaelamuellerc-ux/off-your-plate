@@ -653,10 +653,16 @@
     }
   ];
 
-  // Fixed reference point the rotation count is measured from — it never
-  // needs to change, it's just a starting line. Every ROTATION_PERIOD_DAYS
-  // that pass since this date bump the rotation on by one step.
-  var ROTATION_EPOCH = new Date(2026, 0, 5); // Mon 5 Jan 2026
+  // Fixed reference point the rotation count is measured from — a starting
+  // line, not a commitment to any real go-live date. Every
+  // ROTATION_PERIOD_DAYS that pass since this date bump the rotation on by
+  // one step. Set to the Monday of the current week so the original,
+  // already-tested dishes are the ones showing during setup/preview; once
+  // an actual go-live date is picked (see MENU_LIVE_FROM below), it's worth
+  // sanity-checking which pair this epoch puts live on that date and
+  // nudging it (by whole ROTATION_PERIOD_DAYS increments, to keep both
+  // dishes in a tier changing together) if it doesn't line up.
+  var ROTATION_EPOCH = new Date(2026, 7, 31); // Mon 31 Aug 2026
   var ROTATION_PERIOD_DAYS = 21; // three weeks
   function rotationIndex(date) {
     var days = Math.floor((date - ROTATION_EPOCH) / 86400000);
