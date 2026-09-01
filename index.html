@@ -1,9 +1,4 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Off Your Plate</title>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Off Your Plate</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
 
@@ -468,9 +463,7 @@
     .dish-row .card:nth-child(1) { animation-delay: calc(var(--i, 0) * 70ms + 90ms); }
     .dish-row .card:nth-child(2) { animation-delay: calc(var(--i, 0) * 70ms + 160ms); }
   }
-</style>
-</head>
-<body>
+</style></head><body>
 
 <header class="top">
   <div class="top-inner">
@@ -485,7 +478,7 @@
 <div class="app">
   <main>
     <div class="intro">
-      <p>A home-cooked menu that rotates every fortnight, so there's always something new on your plate.</p>
+      <p>A home-cooked menu that rotates every three weeks, so there's always something new on your plate.</p>
       <p>Some of these are recipes I've found and tested myself — others are Marmee's (my mum — we've called her that since reading <em>Little Women</em> together as kids), passed down and still made her way.</p>
       <p>Growing up in her kitchen, delicious home cooking became a huge part of my childhood — and it's still something I'm passionate about. These days everyone's busier than they used to be, but you still deserve a proper meal.</p>
     </div>
@@ -535,7 +528,7 @@
     </div>
   </section>
 
-  <footer class="legal">Off Your Plate is a small, home-cooked meal service — not affiliated with any delivery platform. Menu and prices for the current fortnight only.</footer>
+  <footer class="legal">Off Your Plate is a small, home-cooked meal service — not affiliated with any delivery platform. Menu and prices for the current three-week rotation only.</footer>
 </div>
 
 <div class="peek-bar" id="peekBar">
@@ -554,11 +547,11 @@
 
   // ---------------- data ----------------
   // Vegetarian, Chicken and Beef each keep one proven "anchor" dish on the
-  // menu at all times, plus a small backlog ("pool") of other recipes that
-  // take turns filling the other `rotatingSlots` (2) spots — two weeks on,
+  // menu at all times, plus a backlog ("pool") of other recipes that take
+  // turns filling the other `rotatingSlots` (2) spots — three weeks on,
   // then swapped out for something else from the backlog. Nothing is ever
-  // deleted from a pool just because it's not live this fortnight; it sits
-  // in the backlog and comes back round in time (see liveRotatingDishes()
+  // deleted from a pool just because it's not live this period; it sits in
+  // the backlog and comes back round in time (see liveRotatingDishes()
   // below), so the menu recycles through everything rather than shrinking.
   //
   // To add a new recipe to a rotating category, just add it to that
@@ -569,9 +562,10 @@
   //
   // A pool only starts actually rotating once it has MORE dishes in it than
   // there are rotating slots (2) — until then, every dish in the pool shows
-  // every fortnight (nothing to leave out yet). Veg still has just one
-  // backlog dish; Chicken and Beef each have two, which fill both slots but
-  // don't yet rotate — add a third to either and rotation kicks in.
+  // every period (nothing to leave out yet). Veg, Chicken and Beef each
+  // have four backlog dishes now, so all three genuinely rotate — add two
+  // more to any of them (see the rotation-fairness note below) whenever a
+  // fresh pair is ready.
   var TIER_SOURCE = [
     {
       key: "breakfast", label: "Breakfast", price: 7.00, color: "var(--tier-breakfast)", soft: "var(--tier-breakfast-soft)",
@@ -601,7 +595,9 @@
       anchor: { id: "veg-tomato-soup", name: "Roasted Tomato & Basil Soup", blurb: "Oven-roasted tomatoes, peppers and whole garlic blended into a silky, deep-flavoured soup finished with basil and cream. Perfect with toast or focaccia." },
       pool: [
         { id: "veg-enchilada-bake", name: "Sweet Potato & Black Bean Enchilada Bake", blurb: "Layered corn tortillas, spiced sweet potato and black beans in a smoky tomato sauce, baked under melted cheese." },
-        { id: "veg-feta-orzo", name: "One-Dish Baked Feta Veggie Orzo", blurb: "Roasted veg, chickpeas and orzo baked with a block of feta that melts into a creamy sauce — one dish, stir and serve." }
+        { id: "veg-feta-orzo", name: "One-Dish Baked Feta Veggie Orzo", blurb: "Roasted veg, chickpeas and orzo baked with a block of feta that melts into a creamy sauce — one dish, stir and serve." },
+        { id: "veg-fried-rice", name: "Vegetable Fried Rice", blurb: "A true one-pan fried rice with scrambled egg, peas and carrots — ready in half an hour, great way to use up leftover rice." },
+        { id: "veg-paella", name: "Vegetable Paella", blurb: "Smoky saffron-and-paprika rice with mushrooms, peppers and chickpeas, finished with a bright lemon-parsley oil — no special pan needed." }
       ]
     },
     {
@@ -610,7 +606,9 @@
       anchor: { id: "chi-butter", name: "Crockpot Butter Chicken & Rice", blurb: "Rich, creamy tomato curry with garam masala and fresh coriander, served over rice." },
       pool: [
         { id: "chi-potatoes", name: "Creamy Chicken & Potatoes", blurb: "Chicken thighs and baby potatoes in a creamy garlic sauce — a complete dish, no sides needed." },
-        { id: "chi-baked-rice", name: "One-Dish Baked Chicken & Rice", blurb: "Chicken, rice and veg all baked together in one dish — hearty, complete, and easy to portion." }
+        { id: "chi-baked-rice", name: "One-Dish Baked Chicken & Rice", blurb: "Chicken, rice and veg all baked together in one dish — hearty, complete, and easy to portion." },
+        { id: "chi-lemon-orzo", name: "One-Skillet Lemon Chicken Orzo", blurb: "Seared chicken thighs and orzo in a bright lemon-butter pan sauce — one skillet, on the table in half an hour." },
+        { id: "chi-honey-garlic", name: "Slow Cooker Honey Garlic Chicken", blurb: "Shredded chicken in a sweet, sticky honey-garlic sauce with a touch of chilli — a true dump-and-go crockpot dish." }
       ]
     },
     {
@@ -619,7 +617,9 @@
       anchor: { id: "beef-chile", name: "Marmee's Fabulous Chile", blurb: "Hearty beef and kidney bean chile, bulked out with fresh tomato and veg." },
       pool: [
         { id: "beef-stew", name: "Marmee's Irish Beef Stew", blurb: "Slow-braised beef with carrots and potatoes in a rich, wine-deepened broth.", price: 13.00, addOns: [ { id: "bacon", label: "Smoked bacon", price: 1.00 } ] },
-        { id: "beef-pasta-bake", name: "Baked Beef & Pasta Bake", blurb: "A cheesy baked pasta with ground beef — rich, comforting, and great reheated." }
+        { id: "beef-pasta-bake", name: "Baked Beef & Pasta Bake", blurb: "A cheesy baked pasta with ground beef — rich, comforting, and great reheated." },
+        { id: "beef-mongolian", name: "Mongolian Ground Beef", blurb: "Ground beef in a sweet-savoury soy, garlic and ginger sauce — one skillet, ready in half an hour." },
+        { id: "beef-moroccan-meatballs", name: "Moroccan Meatball Tagine", blurb: "Spiced beef meatballs simmered in a warm tomato sauce — a genuine one-pot, ready in just over an hour." }
       ]
     },
     {
@@ -653,19 +653,30 @@
     }
   ];
 
-  // Fixed reference point the fortnight count is measured from — it never
-  // needs to change, it's just a starting line. Every 14 days that pass
-  // since this date bump the rotation on by one step.
+  // Fixed reference point the rotation count is measured from — it never
+  // needs to change, it's just a starting line. Every ROTATION_PERIOD_DAYS
+  // that pass since this date bump the rotation on by one step.
   var ROTATION_EPOCH = new Date(2026, 0, 5); // Mon 5 Jan 2026
-  function fortnightIndex(date) {
+  var ROTATION_PERIOD_DAYS = 21; // three weeks
+  function rotationIndex(date) {
     var days = Math.floor((date - ROTATION_EPOCH) / 86400000);
-    return Math.floor(days / 14);
+    return Math.floor(days / ROTATION_PERIOD_DAYS);
   }
-  // Picks `count` dishes out of `pool` for the given fortnight index. Once
-  // a pool has more dishes than there are slots, this cycles through them
-  // fortnight by fortnight so everything gets a turn rather than the same
-  // items showing forever — a simple, predictable rotation, easy to swap
-  // for something fancier later if it ever needs to be.
+  // Picks `count` dishes out of `pool` for the given rotation-period index.
+  // Once a pool has more dishes than there are slots, this cycles through
+  // them in full, non-overlapping blocks of `count` — period 0 gets dishes
+  // [0,1], period 1 gets [2,3], period 2 gets [4,5], and so on, wrapping
+  // back to [0,1] once the pool is exhausted. Both live dishes in a tier
+  // always change together, and a dish always comes back in the same order
+  // it left ("first pair off is first pair back").
+  //
+  // This is only PERFECTLY fair — every dish gets an equal, predictable
+  // rest — when a pool's length is an exact multiple of `count` (so with
+  // rotatingSlots at 2: 4, 6, 8... backlog recipes per tier). An odd pool
+  // size (e.g. 3 or 5) still rotates and nothing repeats back-to-back, but
+  // the rest periods between a dish's turns can end up slightly uneven.
+  // When adding new backlog recipes, add them two at a time to keep each
+  // pool an even number and preserve the clean, predictable rotation.
   function liveRotatingDishes(pool, count, idx) {
     if (!pool || !pool.length) return [];
     if (pool.length <= count) return pool.slice();
@@ -678,7 +689,7 @@
   // (pricing, ordering, DISH_MAP, the WhatsApp message) needs to know or
   // care that a rotation happened.
   function buildTiers(source, date) {
-    var idx = fortnightIndex(date);
+    var idx = rotationIndex(date);
     return source.map(function (tier) {
       if (!tier.anchor) return tier; // flat category — unchanged
       var built = {};
@@ -696,12 +707,12 @@
   //   var MENU_LIVE_FROM = new Date(2026, 8, 7); // Mon 7 Sep 2026 (month is 0-indexed, so 8 = September)
   // While it's null (as now, during setup), ordering windows keep rolling
   // forward relative to today, same as before — nothing changes. Once set,
-  // ordering is pinned to that one fortnight: as each window's cutoff
-  // passes it simply drops off the list rather than being replaced by a
-  // new one, and once all four are gone the page shows a "closed" state —
-  // so this menu can never quietly keep taking orders into a week it was
-  // never meant to cover. Set it back to null (and update TIERS) when the
-  // next fortnight's menu is ready to go live.
+  // ordering is pinned to that one three-week rotation: as each window's
+  // cutoff passes it simply drops off the list rather than being replaced
+  // by a new one, and once all six are gone the page shows a "closed"
+  // state — so this menu can never quietly keep taking orders into a week
+  // it was never meant to cover. Set it back to null (and update TIERS)
+  // when the next rotation's menu is ready to go live.
   var MENU_LIVE_FROM = null;
 
   // Small, hand-drawn line icons per tier — inline so nothing external is
@@ -780,16 +791,17 @@
   function addDays(d, n) { var r = new Date(d); r.setDate(r.getDate() + n); r.setHours(0, 0, 0, 0); return r; }
   function addWeeks(d, n) { var r = new Date(d); r.setDate(r.getDate() + n * 7); return r; } // keeps time-of-day, unlike addDays
 
-  // Four windows per fortnight — this week's Mon–Wed and Thu–Sat, plus next
-  // week's. Two implementations: computeRollingWindows() (used while
-  // MENU_LIVE_FROM is null) always finds the next four relative to today,
-  // rolling forward forever — fine during setup, before this menu is
-  // actually live. computeFixedFortnightWindows() (used once MENU_LIVE_FROM
-  // is set) pins the same four windows to that specific fortnight instead:
-  // as each one's cutoff passes it falls away rather than being replaced,
-  // so the page can detect when the whole fortnight is spent.
+  // Six windows per three-week rotation — this week's Mon–Wed and Thu–Sat,
+  // plus the following two weeks'. Two implementations:
+  // computeRollingWindows() (used while MENU_LIVE_FROM is null) always
+  // finds the next six relative to today, rolling forward forever — fine
+  // during setup, before this menu is actually live.
+  // computeFixedRotationWindows() (used once MENU_LIVE_FROM is set) pins
+  // the same six windows to that specific rotation instead: as each one's
+  // cutoff passes it falls away rather than being replaced, so the page can
+  // detect when the whole rotation is spent.
   function computeWindows() {
-    return MENU_LIVE_FROM ? computeFixedFortnightWindows(MENU_LIVE_FROM) : computeRollingWindows();
+    return MENU_LIVE_FROM ? computeFixedRotationWindows(MENU_LIVE_FROM) : computeRollingWindows();
   }
   function computeRollingWindows() {
     var sun0 = nextOccurrence(0, 12, 0), tue0 = nextOccurrence(2, 19, 0);
@@ -797,17 +809,21 @@
       { cutoff: sun0, start: addDays(sun0, 1), end: addDays(sun0, 3), dayLabel: "Mon–Wed" },
       { cutoff: tue0, start: addDays(tue0, 2), end: addDays(tue0, 4), dayLabel: "Thu–Sat" },
       { cutoff: addWeeks(sun0, 1), start: addDays(addWeeks(sun0, 1), 1), end: addDays(addWeeks(sun0, 1), 3), dayLabel: "Mon–Wed" },
-      { cutoff: addWeeks(tue0, 1), start: addDays(addWeeks(tue0, 1), 2), end: addDays(addWeeks(tue0, 1), 4), dayLabel: "Thu–Sat" }
+      { cutoff: addWeeks(tue0, 1), start: addDays(addWeeks(tue0, 1), 2), end: addDays(addWeeks(tue0, 1), 4), dayLabel: "Thu–Sat" },
+      { cutoff: addWeeks(sun0, 2), start: addDays(addWeeks(sun0, 2), 1), end: addDays(addWeeks(sun0, 2), 3), dayLabel: "Mon–Wed" },
+      { cutoff: addWeeks(tue0, 2), start: addDays(addWeeks(tue0, 2), 2), end: addDays(addWeeks(tue0, 2), 4), dayLabel: "Thu–Sat" }
     ]);
   }
-  function computeFixedFortnightWindows(monday) {
+  function computeFixedRotationWindows(monday) {
     var sun0 = new Date(monday); sun0.setDate(sun0.getDate() - 1); sun0.setHours(12, 0, 0, 0);
     var tue0 = new Date(monday); tue0.setDate(tue0.getDate() + 1); tue0.setHours(19, 0, 0, 0);
     var raw = [
       { cutoff: sun0, start: addDays(sun0, 1), end: addDays(sun0, 3), dayLabel: "Mon–Wed" },
       { cutoff: tue0, start: addDays(tue0, 2), end: addDays(tue0, 4), dayLabel: "Thu–Sat" },
       { cutoff: addWeeks(sun0, 1), start: addDays(addWeeks(sun0, 1), 1), end: addDays(addWeeks(sun0, 1), 3), dayLabel: "Mon–Wed" },
-      { cutoff: addWeeks(tue0, 1), start: addDays(addWeeks(tue0, 1), 2), end: addDays(addWeeks(tue0, 1), 4), dayLabel: "Thu–Sat" }
+      { cutoff: addWeeks(tue0, 1), start: addDays(addWeeks(tue0, 1), 2), end: addDays(addWeeks(tue0, 1), 4), dayLabel: "Thu–Sat" },
+      { cutoff: addWeeks(sun0, 2), start: addDays(addWeeks(sun0, 2), 1), end: addDays(addWeeks(sun0, 2), 3), dayLabel: "Mon–Wed" },
+      { cutoff: addWeeks(tue0, 2), start: addDays(addWeeks(tue0, 2), 2), end: addDays(addWeeks(tue0, 2), 4), dayLabel: "Thu–Sat" }
     ];
     var now = new Date();
     return finalizeWindows(raw.filter(function (w) { return w.cutoff > now; })); // expired windows fall away, no replacement
@@ -1339,7 +1355,7 @@
 
   // ---------------- feedback on past orders ----------------
   // Every dish that's ever been offered — anchors plus the full backlog in
-  // each rotating pool, not just what happens to be live this fortnight —
+  // each rotating pool, not just what happens to be live this period —
   // so someone can still rate something from a couple of weeks ago even
   // once it's rotated out. Built straight from TIER_SOURCE so this list
   // never needs updating by hand as pools grow.
@@ -1422,9 +1438,9 @@
     document.querySelector("header.top").classList.toggle("scrolled", window.scrollY > 4);
   }, { passive: true });
 
-  // Shown once MENU_LIVE_FROM is set and every window in this fortnight has
+  // Shown once MENU_LIVE_FROM is set and every window in this rotation has
   // fallen away (its cutoff has passed) — rather than the page quietly
-  // continuing to sell this fortnight's 8 dishes for a week they were never
+  // continuing to sell this rotation's dishes for a week they were never
   // priced or planned for.
   function renderClosedState() {
     document.getElementById("cutoffs").innerHTML = "";
@@ -1434,7 +1450,7 @@
     document.querySelector(".layout").classList.add("closed");
     document.getElementById("tiers").innerHTML =
       '<div class="menu-closed">' + ICONS.bowl +
-      '<h2 class="display">This fortnight\'s ordering has closed</h2>' +
+      '<h2 class="display">This rotation\'s ordering has closed</h2>' +
       '<p>The next menu will be up shortly — check back soon, or message Michaela directly if you need something sooner.</p>' +
       '</div>';
   }
@@ -1453,5 +1469,4 @@
 })();
 </script>
 
-</body>
-</html>
+</body></html>
