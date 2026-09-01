@@ -1098,8 +1098,13 @@
 
       var head = document.createElement("div");
       head.className = "tier-head";
+      // Breakfast deliberately skips this header even though tier.price is
+      // set — that price is only a per-dish fallback (for the Kefir Chia
+      // Pot) and doesn't hold for the whole section once the Egg Muffin
+      // Cups' own variant/batch pricing is in the mix, so showing it as a
+      // blanket "per portion" figure up top would be misleading.
       head.innerHTML = '<span class="tier-icon">' + ICONS[tier.key] + '</span><h2 class="display">' + tier.label + '</h2>' +
-        (typeof tier.price === "number" ? '<span class="tier-price">per portion <b class="mono">' + fmt(tier.price) + '</b></span>' : '');
+        (typeof tier.price === "number" && tier.key !== "breakfast" ? '<span class="tier-price">per portion <b class="mono">' + fmt(tier.price) + '</b></span>' : '');
       section.appendChild(head);
 
       var row = document.createElement("div");
