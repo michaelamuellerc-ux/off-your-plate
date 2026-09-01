@@ -1368,24 +1368,37 @@
   // Every dish that's ever been offered — anchors plus the full backlog in
   // each rotating pool, not just what happens to be live this period —
   // so someone can still rate something from a couple of weeks ago even
-  // once it's rotated out. Built straight from TIER_SOURCE so this list
-  // never needs updating by hand as pools grow.
+  // once it's rotated out. Grouped by tier (in TIER_SOURCE's own order —
+  // Breakfast, Veg, Chicken, Beef, Baked Goods, On the Go) and sorted by
+  // name within each group, so the dropdown reads as labelled sections
+  // instead of one long alphabetical list. Built straight from TIER_SOURCE,
+  // so a new recipe added to any tier's `pool`/`dishes` picks up this same
+  // grouped structure automatically — nothing here needs updating by hand.
   function allDishesEver() {
-    var out = [];
+    var groups = [];
     TIER_SOURCE.forEach(function (tier) {
       var list = tier.anchor ? [tier.anchor].concat(tier.pool || []) : (tier.dishes || []);
-      list.forEach(function (d) { out.push({ id: d.id, name: d.name, tierLabel: tier.label }); });
+      if (!list.length) return;
+      var dishes = list.map(function (d) { return { id: d.id, name: d.name }; });
+      dishes.sort(function (a, b) { return a.name < b.name ? -1 : a.name > b.name ? 1 : 0; });
+      groups.push({ tierLabel: tier.label, dishes: dishes });
     });
-    out.sort(function (a, b) { return a.name < b.name ? -1 : a.name > b.name ? 1 : 0; });
-    return out;
+    return groups;
   }
-  var FEEDBACK_DISHES = allDishesEver();
+  var FEEDBACK_GROUPS = allDishesEver();
+  // Flat id -> dish lookup, for wiring the select's value back to a name —
+  // kept separate from FEEDBACK_GROUPS so the dropdown markup can stay
+  // grouped by tier while this lookup stays a simple one-step map.
+  var FEEDBACK_DISH_MAP = {};
+  FEEDBACK_GROUPS.forEach(function (g) { g.dishes.forEach(function (d) { FEEDBACK_DISH_MAP[d.id] = d; }); });
 
   (function initFeedback() {
     var select = document.getElementById("feedbackDish");
     select.innerHTML = '<option value="" disabled selected>Choose a dish…</option>' +
-      FEEDBACK_DISHES.map(function (d) {
-        return '<option value="' + d.id + '">' + d.name + ' — ' + d.tierLabel + '</option>';
+      FEEDBACK_GROUPS.map(function (g) {
+        return '<optgroup label="' + g.tierLabel + '">' +
+          g.dishes.map(function (d) { return '<option value="' + d.id + '">' + d.name + '</option>'; }).join("") +
+          '</optgroup>';
       }).join("");
 
     var link = document.getElementById("feedbackSend");
@@ -1398,7 +1411,7 @@
       link.style.pointerEvents = ready ? "auto" : "none";
       link.style.opacity = ready ? 1 : .45;
       if (!ready) return;
-      var dish = FEEDBACK_DISHES.filter(function (d) { return d.id === dishId; })[0];
+      var dish = FEEDBACK_DISH_MAP[dishId];
       var line = rating === "loved" ? "We loved this! 😋" : "This wasn't our fave.";
       var extra = comments.value.trim();
       var msg = "Feedback on a dish:\n\n" + dish.name + "\n" + line + (extra ? "\n\n" + extra : "");
