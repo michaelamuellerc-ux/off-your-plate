@@ -518,8 +518,8 @@
       <div class="feedback-controls">
         <select class="field" id="feedbackDish"></select>
         <div class="feedback-choices" id="feedbackChoices">
-          <button type="button" class="feedback-choice" data-rating="loved">We loved this 😋</button>
-          <button type="button" class="feedback-choice" data-rating="meh">Wasn't our fave</button>
+          <button type="button" class="feedback-choice" data-rating="loved">We loved this 😍</button>
+          <button type="button" class="feedback-choice" data-rating="meh">Wasn't our fave 😕</button>
         </div>
         <label class="field feedback-comments-label" for="feedbackComments">Additional comments</label>
         <textarea class="field feedback-comments" id="feedbackComments" rows="2" placeholder="Optional"></textarea>
@@ -1412,7 +1412,7 @@
       link.style.opacity = ready ? 1 : .45;
       if (!ready) return;
       var dish = FEEDBACK_DISH_MAP[dishId];
-      var line = rating === "loved" ? "We loved this!" : "This wasn't our fave.";
+      var line = rating === "loved" ? "We loved this! 😍" : "This wasn't our fave 😕";
       var extra = comments.value.trim();
       var msg = "Feedback on a dish:\n\n" + dish.name + "\n" + line + (extra ? "\n\n" + extra : "");
       link.href = "https://wa.me/" + OWNER_WHATSAPP + "?text=" + encodeURIComponent(msg);
