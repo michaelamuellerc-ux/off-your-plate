@@ -1412,7 +1412,7 @@
       link.style.opacity = ready ? 1 : .45;
       if (!ready) return;
       var dish = FEEDBACK_DISH_MAP[dishId];
-      var line = rating === "loved" ? "We loved this! 😋" : "This wasn't our fave.";
+      var line = rating === "loved" ? "We loved this!" : "This wasn't our fave.";
       var extra = comments.value.trim();
       var msg = "Feedback on a dish:\n\n" + dish.name + "\n" + line + (extra ? "\n\n" + extra : "");
       link.href = "https://wa.me/" + OWNER_WHATSAPP + "?text=" + encodeURIComponent(msg);
