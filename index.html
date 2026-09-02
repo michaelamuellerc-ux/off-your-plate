@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Off Your Plate</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
@@ -376,6 +376,8 @@
   .postcode-note { display: none; font-size: 11.5px; color: var(--gold); margin: -6px 0 var(--sp-3); line-height: 1.5; }
   .postcode-note.is-visible { display: block; }
   .postcode-note.zone-core { color: var(--accent); }
+  .field .optional { font-weight: 500; color: var(--ink-faint); text-transform: none; letter-spacing: 0; }
+  .perk-fields { border: 1px dashed var(--line); border-radius: var(--r-md); padding: 12px 12px 0; margin-bottom: var(--sp-3); }
   .min-order-note { display: none; font-size: 11.5px; color: var(--gold); margin: -6px 0 var(--sp-4); line-height: 1.5; }
   .min-order-note.is-visible { display: block; }
 
@@ -580,9 +582,17 @@
         <div class="payment-note">Payment: cash on delivery</div>
         <label class="field" for="famName">Family name</label>
         <input class="field" id="famName" type="text" placeholder="e.g. The Alverez family" />
+        <label class="field" for="famPhone">Phone number</label>
+        <input class="field" id="famPhone" type="tel" placeholder="e.g. 07123 456789" autocomplete="tel" />
         <label class="field" for="famPostcode">Postcode</label>
         <input class="field" id="famPostcode" type="text" placeholder="e.g. N1 2AB" autocapitalize="characters" />
         <p class="postcode-note" id="postcodeNote"></p>
+        <div class="perk-fields">
+          <label class="field" for="famDiscount">Discount code <span class="optional">(optional)</span></label>
+          <input class="field" id="famDiscount" type="text" placeholder="e.g. FIRST10" autocapitalize="characters" />
+          <label class="field" for="famReferral">Referred by <span class="optional">(optional)</span></label>
+          <input class="field" id="famReferral" type="text" placeholder="Friend's name" />
+        </div>
         <label class="field" for="famNotes">Notes (allergies, swaps, anything else)</label>
         <textarea class="field" id="famNotes" rows="2" placeholder="Optional"></textarea>
         <div class="send-row">
@@ -1375,7 +1385,7 @@
     return items;
   }
 
-  function buildMessage(items, name, notes, postcode) {
+  function buildMessage(items, name, notes, postcode, phone, discountCode, referredBy) {
     if (!items.length) return "";
     var lines = [];
     lines.push("Off Your Plate order" + (name ? " — " + name : ""));
@@ -1396,12 +1406,22 @@
     }
     lines.push("Total: " + fmt(total(items) + fee));
     lines.push("Payment: cash on delivery");
-    if (postcode) {
-      var tier = deliveryZoneTier(postcode);
-      var zoneNote = tier === "core" ? " (core zone — free delivery)"
-        : tier === "extended" ? " (extended zone — delivery added)"
-        : " (outside delivery zone — collection)";
-      lines.push(""); lines.push("Postcode: " + postcode + zoneNote);
+    // Contact/perk block — each line only appears when filled, but they all
+    // share one leading blank line so the message never gets doubled gaps.
+    // Kept as plain "Label: value" lines (matching Postcode's existing
+    // format) on purpose: the order-tracker tool parses these verbatim.
+    if (phone || postcode || discountCode || referredBy) {
+      lines.push("");
+      if (phone) lines.push("Phone: " + phone);
+      if (postcode) {
+        var tier = deliveryZoneTier(postcode);
+        var zoneNote = tier === "core" ? " (core zone — free delivery)"
+          : tier === "extended" ? " (extended zone — delivery added)"
+          : " (outside delivery zone — collection)";
+        lines.push("Postcode: " + postcode + zoneNote);
+      }
+      if (discountCode) lines.push("Discount code: " + discountCode);
+      if (referredBy) lines.push("Referred by: " + referredBy);
     }
     if (notes) { lines.push(""); lines.push("Notes: " + notes); }
     return lines.join("\n");
@@ -1455,22 +1475,25 @@
   // A stable fingerprint of "this exact order" — same items/quantities/
   // windows/name/notes. Order-independent (sorted by dish id) so re-render
   // order never breaks the comparison.
-  function orderSnapshot(items, name, notes, postcode) {
+  function orderSnapshot(items, name, notes, postcode, phone, discountCode, referredBy) {
     var norm = items.slice()
       .sort(function (a, b) { return a.id < b.id ? -1 : a.id > b.id ? 1 : 0; })
       .map(function (i) { return i.id + ":" + i.qty + ":" + i.window + ":" + (i.sizeLabel || "") + ":" + (i.addOns || []).map(function (a) { return a.id; }).sort().join(","); })
       .join("|");
-    return norm + "||" + name + "||" + notes + "||" + postcode;
+    return norm + "||" + name + "||" + notes + "||" + postcode + "||" + phone + "||" + discountCode + "||" + referredBy;
   }
 
   function updateSendLinks(items) {
     var name = document.getElementById("famName").value.trim();
     var notes = document.getElementById("famNotes").value.trim();
     var postcode = document.getElementById("famPostcode").value.trim();
-    var msg = buildMessage(items, name, notes, postcode);
+    var phone = document.getElementById("famPhone").value.trim();
+    var discountCode = document.getElementById("famDiscount").value.trim();
+    var referredBy = document.getElementById("famReferral").value.trim();
+    var msg = buildMessage(items, name, notes, postcode, phone, discountCode, referredBy);
     var wa = document.getElementById("sendWhatsapp");
     var disabled = items.length === 0 || total(items) < MINIMUM_ORDER;
-    var alreadySent = lastSentSnapshot !== null && orderSnapshot(items, name, notes, postcode) === lastSentSnapshot;
+    var alreadySent = lastSentSnapshot !== null && orderSnapshot(items, name, notes, postcode, phone, discountCode, referredBy) === lastSentSnapshot;
 
     wa.href = "https://wa.me/" + OWNER_WHATSAPP + "?text=" + encodeURIComponent(msg);
 
@@ -1492,7 +1515,10 @@
     var name = document.getElementById("famName").value.trim();
     var notes = document.getElementById("famNotes").value.trim();
     var postcode = document.getElementById("famPostcode").value.trim();
-    var msg = buildMessage(items, name, notes, postcode);
+    var phone = document.getElementById("famPhone").value.trim();
+    var discountCode = document.getElementById("famDiscount").value.trim();
+    var referredBy = document.getElementById("famReferral").value.trim();
+    var msg = buildMessage(items, name, notes, postcode, phone, discountCode, referredBy);
     if (!msg) return;
     function fallback() {
       var ta = document.createElement("textarea");
@@ -1513,6 +1539,9 @@
 
   document.getElementById("famName").addEventListener("input", function () { updateSendLinks(currentItems()); });
   document.getElementById("famNotes").addEventListener("input", function () { updateSendLinks(currentItems()); });
+  document.getElementById("famPhone").addEventListener("input", function () { updateSendLinks(currentItems()); });
+  document.getElementById("famDiscount").addEventListener("input", function () { updateSendLinks(currentItems()); });
+  document.getElementById("famReferral").addEventListener("input", function () { updateSendLinks(currentItems()); });
   // Friendly, non-blocking heads-up when a typed postcode falls outside
   // DELIVERY_ZONE — never disables sending, since collection is always a
   // fallback option (see buildMessage(), which also flags this to Michaela).
@@ -1567,7 +1596,10 @@
       var name = document.getElementById("famName").value.trim();
       var notes = document.getElementById("famNotes").value.trim();
       var postcode = document.getElementById("famPostcode").value.trim();
-      lastSentSnapshot = orderSnapshot(items, name, notes, postcode);
+      var phone = document.getElementById("famPhone").value.trim();
+      var discountCode = document.getElementById("famDiscount").value.trim();
+      var referredBy = document.getElementById("famReferral").value.trim();
+      lastSentSnapshot = orderSnapshot(items, name, notes, postcode, phone, discountCode, referredBy);
       updateSendLinks(items);
     });
   }
