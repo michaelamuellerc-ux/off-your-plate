@@ -1,9 +1,4 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Off Your Plate</title>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Off Your Plate</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
 
@@ -2467,7 +2462,7 @@
     TIER_SOURCE.forEach(function (tier) {
       var list = tier.anchor ? [tier.anchor].concat(tier.pool || []) : (tier.dishes || []);
       if (!list.length) return;
-      var dishes = list.map(function (d) { return { id: d.id, name: d.name }; });
+      var dishes = list.map(function (d) { return { id: d.id, name: d.name, tierLabel: tier.label }; });
       dishes.sort(function (a, b) { return a.name < b.name ? -1 : a.name > b.name ? 1 : 0; });
       groups.push({ tierLabel: tier.label, dishes: dishes });
     });
@@ -2502,7 +2497,16 @@
       var dish = FEEDBACK_DISH_MAP[dishId];
       var line = rating === "loved" ? "We loved this! 😍" : "This wasn't our fave 😕";
       var extra = comments.value.trim();
-      var msg = "Feedback on a dish:\n\n" + dish.name + "\n" + line + (extra ? "\n\n" + extra : "");
+      // Structured "Label: value" lines (same pattern as the order message)
+      // so the Tracker can log this automatically — dish, category and
+      // rating first as plain data, the friendly sentence and any comment
+      // after so it still reads naturally in WhatsApp.
+      var msg = "Off Your Plate feedback\n\n"
+        + "Dish: " + dish.name + "\n"
+        + "Category: " + dish.tierLabel + "\n"
+        + "Rating: " + (rating === "loved" ? "Loved it" : "Not for us") + "\n"
+        + (extra ? "Comments: " + extra + "\n\n" : "\n")
+        + line;
       link.href = "https://wa.me/" + OWNER_WHATSAPP + "?text=" + encodeURIComponent(msg);
     }
 
