@@ -617,6 +617,22 @@
   }
   .peek-bar button:active { transform: scale(.96); }
 
+  /* ---------- contact line ---------- */
+  /* Sits between the menu and the feedback card — a plain divider row
+     rather than a filled accent/gold box like reminder-optin or
+     referral-optin, since this isn't a perk to opt into, just a standing
+     "here's how to reach me". Bigger and warmer than the small print in
+     footer.legal, but deliberately not styled as another call-to-action. */
+  .contact-line {
+    max-width: 1180px; margin: var(--sp-8) auto 0; padding: var(--sp-5) 20px 0;
+    border-top: 1px solid var(--line);
+    text-align: center; color: var(--ink-soft); font-size: 14.5px; line-height: 1.6;
+  }
+  .contact-line svg { width: 17px; height: 17px; color: var(--ink-faint); vertical-align: -3px; margin-right: 6px; }
+  .contact-line a {
+    color: var(--accent-strong); font-weight: 700; text-decoration: underline; text-underline-offset: 2px;
+  }
+
   /* ---------- feedback ---------- */
   .feedback-section { max-width: 1180px; margin: var(--sp-8) auto 0; padding: 0 20px; }
   .feedback-card {
@@ -805,6 +821,11 @@
       </aside>
     </div>
   </main>
+
+  <p class="contact-line">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16v12H4z"/><path d="m4 7 8 6 8-6"/></svg>
+    Questions? Comments? <a href="mailto:michaela.mueller.c@gmail.com">Drop us a line.</a>
+  </p>
 
   <section class="feedback-section">
     <div class="feedback-card">
