@@ -1,4 +1,9 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Off Your Plate</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Off Your Plate</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
 
@@ -340,6 +345,9 @@
     @keyframes itemIn { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: none; } }
     .order-item { animation: itemIn .24s var(--ease-out); }
   }
+  .order-delivery { display: flex; justify-content: space-between; align-items: baseline; padding: 0 12px; margin: -4px 0 var(--sp-2); font-size: 12.5px; color: var(--ink-soft); }
+  .order-delivery[hidden] { display: none; }
+  .order-delivery .amt { font-family: 'IBM Plex Mono', monospace; }
   .order-total { display: flex; justify-content: space-between; align-items: baseline; background: var(--accent-soft); border-radius: var(--r-md); padding: 10px 12px; margin-bottom: var(--sp-4); }
   .order-total .label { font-size: 13.5px; color: var(--ink-soft); }
   .order-total .amt { font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 600; color: var(--accent); }
@@ -357,6 +365,11 @@
     transition: border-color var(--dur-fast) var(--ease-out);
   }
   input.field:focus, textarea.field:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+  .postcode-note { display: none; font-size: 11.5px; color: var(--gold); margin: -6px 0 var(--sp-3); line-height: 1.5; }
+  .postcode-note.is-visible { display: block; }
+  .postcode-note.zone-core { color: var(--accent); }
+  .min-order-note { display: none; font-size: 11.5px; color: var(--gold); margin: -6px 0 var(--sp-4); line-height: 1.5; }
+  .min-order-note.is-visible { display: block; }
 
   .send-row { display: flex; flex-direction: column; gap: var(--sp-2); }
   .btn {
@@ -376,6 +389,24 @@
   }
   .btn:disabled { opacity: .45; cursor: not-allowed; }
   .hint { font-size: 11.5px; color: var(--ink-faint); margin-top: var(--sp-2); line-height: 1.5; }
+
+  .delivery-zone {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg);
+    padding: var(--sp-5) var(--sp-6); margin: 0 0 var(--sp-6); box-shadow: var(--shadow-sm);
+    display: flex; flex-direction: column; gap: var(--sp-2);
+  }
+  .delivery-zone-head { display: flex; align-items: center; gap: 9px; }
+  .delivery-zone-head svg { width: 19px; height: 19px; color: var(--accent); flex: none; }
+  .delivery-zone-head h2 { margin: 0; font-size: 19px; }
+  .delivery-zone-lists { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-8); margin: 2px 0; }
+  .delivery-zone-label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-faint); margin-bottom: 3px; }
+  .delivery-zone-lists p { margin: 0; font-size: 13.5px; color: var(--ink); }
+  .delivery-zone .sub { margin: 0; color: var(--ink-soft); font-size: 13px; line-height: 1.6; max-width: 62ch; }
+
+  .reminder-optin { display: flex; align-items: center; gap: 10px; margin: 0 0 var(--sp-6); padding: 11px 16px; background: var(--accent-soft); border-radius: var(--r-md); }
+  .reminder-optin svg { width: 18px; height: 18px; color: var(--accent-strong); flex: none; }
+  .reminder-optin p { margin: 0; font-size: 13px; color: var(--ink); line-height: 1.5; }
+  .reminder-link { color: var(--accent-strong); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
 
   /* desktop two column */
   .layout { display: block; }
@@ -463,7 +494,10 @@
     .dish-row .card:nth-child(1) { animation-delay: calc(var(--i, 0) * 70ms + 90ms); }
     .dish-row .card:nth-child(2) { animation-delay: calc(var(--i, 0) * 70ms + 160ms); }
   }
-</style></head><body>
+</style>
+</head>
+<body>
+
 
 <header class="top">
   <div class="top-inner">
@@ -483,6 +517,29 @@
       <p>Growing up in her kitchen, delicious home cooking became a huge part of my childhood — and it's still something I'm passionate about. These days everyone's busier than they used to be, but you still deserve a proper meal.</p>
     </div>
 
+    <div class="delivery-zone">
+      <div class="delivery-zone-head">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-7.5 7-12.5A7 7 0 1 0 5 8.5C5 13.5 12 21 12 21Z"/><circle cx="12" cy="8.5" r="2.3"/></svg>
+        <h2 class="display">Where we deliver</h2>
+      </div>
+      <div class="delivery-zone-lists">
+        <div>
+          <span class="delivery-zone-label">Core zone · free delivery</span>
+          <p>N1 · N5 · N7 · EC1 · WC1 · NW1</p>
+        </div>
+        <div>
+          <span class="delivery-zone-label">Extended zone · £2.50 delivery</span>
+          <p>N4 · N16 · N19 · E1 · E2 · E8 · EC2 · NW5</p>
+        </div>
+      </div>
+      <p class="sub">Somewhere else? No problem — you're still welcome to order, we'll just arrange a collection point instead of a doorstep drop-off.</p>
+    </div>
+
+    <div class="reminder-optin">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 4 1.5 5.5 2 6H4c.5-.5 2-2 2-6Z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg>
+      <p>Ordering later in the week? <a href="#" id="reminderLink" class="reminder-link" target="_top">Get a WhatsApp nudge</a> an hour before each cutoff, so you never miss a window.</p>
+    </div>
+
     <nav class="quick-nav" id="quickNav" aria-label="Jump to a menu section"></nav>
 
     <div class="layout">
@@ -493,13 +550,21 @@
         <h2 class="display">Your order</h2>
         <p class="sub">Review, then send it straight to Michaela.</p>
         <div class="order-items" id="orderItems"></div>
+        <div class="order-delivery" id="orderDelivery" hidden>
+          <span class="label">Delivery (extended zone)</span>
+          <span class="amt mono" id="orderDeliveryFee">£0.00</span>
+        </div>
         <div class="order-total">
           <span class="label">Total</span>
           <span class="amt mono" id="orderTotal">£0.00</span>
         </div>
+        <p class="min-order-note" id="minOrderNote"></p>
         <div class="payment-note">Payment: cash on delivery</div>
         <label class="field" for="famName">Family name</label>
         <input class="field" id="famName" type="text" placeholder="e.g. The Alverez family" />
+        <label class="field" for="famPostcode">Postcode</label>
+        <input class="field" id="famPostcode" type="text" placeholder="e.g. N1 2AB" autocapitalize="characters" />
+        <p class="postcode-note" id="postcodeNote"></p>
         <label class="field" for="famNotes">Notes (allergies, swaps, anything else)</label>
         <textarea class="field" id="famNotes" rows="2" placeholder="Optional"></textarea>
         <div class="send-row">
@@ -617,7 +682,7 @@
       anchor: { id: "beef-chile", name: "Marmee's Fabulous Chile", blurb: "Hearty beef and kidney bean chile, bulked out with fresh tomato and veg." },
       pool: [
         { id: "beef-stew", name: "Marmee's Irish Beef Stew", blurb: "Slow-braised beef with carrots and potatoes in a rich, wine-deepened broth.", price: 13.00, addOns: [ { id: "bacon", label: "Smoked bacon", price: 1.00 } ] },
-        { id: "beef-pasta-bake", name: "Baked Beef & Pasta Bake", blurb: "A cheesy baked pasta with ground beef — rich, comforting, and great reheated." },
+        { id: "beef-pasta-bake", name: "Baked Beef & Pasta Casserole", blurb: "A cheesy baked pasta with ground beef — rich, comforting, and great reheated." },
         { id: "beef-mongolian", name: "Mongolian Ground Beef", blurb: "Ground beef in a sweet-savoury soy, garlic and ginger sauce — one skillet, ready in half an hour." },
         { id: "beef-moroccan-meatballs", name: "Moroccan Meatball Tagine", blurb: "Spiced beef meatballs simmered in a warm tomato sauce — a genuine one-pot, ready in just over an hour." }
       ]
@@ -708,6 +773,64 @@
 
   var OWNER_WHATSAPP = "447884299705"; // +44 7884 299705, formatted for wa.me (no +, no leading 0)
 
+  // "Get a WhatsApp nudge" opt-in (static link, set once — this isn't tied
+  // to an order). There's no backend here: it just opens WhatsApp with a
+  // ready-made opt-in message to Michaela, who keeps her own list and sends
+  // the actual reminder texts herself an hour before each cutoff.
+  (function () {
+    var link = document.getElementById("reminderLink");
+    if (!link) return;
+    var msg = "Hi! Please add me to your cutoff reminder list — I'd like a WhatsApp nudge an hour before each ordering cutoff 🔔";
+    link.href = "https://wa.me/" + OWNER_WHATSAPP + "?text=" + encodeURIComponent(msg);
+  })();
+
+  // Postcode districts (outward-code level, e.g. "N1" not "N1 2AB") currently
+  // covered for delivery — core (easy bike loop from base, free) and
+  // extended (still workable, but longer or more occasional, small fee).
+  // Keep both lists in sync with the "Where we deliver" panel in the HTML
+  // above if either changes.
+  var CORE_ZONE = ["N1", "N5", "N7", "EC1", "WC1", "NW1"];
+  var EXTENDED_ZONE = ["N4", "N16", "N19", "E1", "E2", "E8", "EC2", "NW5"];
+  var EXTENDED_DELIVERY_FEE = 2.5;
+  // Minimum order, measured against food alone — an extended-zone family
+  // shouldn't have to buy extra food just because their delivery fee pushed
+  // them over the line. Delivery fee is added afterwards, on top.
+  var MINIMUM_ORDER = 20;
+  // Pulls the outward code (area + district number, e.g. "EC1" out of
+  // "EC1V 9NR" or "N1" out of "n1 2ab") out of whatever someone typed, so
+  // matching is exact rather than a risky substring check — "N1" must never
+  // match "N10" or "N19" just because it's a text prefix of them. The tricky
+  // bit is a postcode typed with no space (e.g. "N12AB"): the inward half is
+  // always exactly digit+letter+letter, so that gets stripped off the end
+  // first if present — otherwise naive digit-matching would misread "N1" out
+  // of "N12AB" as the outward code "N12".
+  function postcodeDistrict(raw) {
+    var cleaned = (raw || "").toUpperCase().trim();
+    if (!cleaned) return "";
+    var spaceIdx = cleaned.indexOf(" ");
+    var outward = spaceIdx !== -1 ? cleaned.slice(0, spaceIdx)
+      : (/^.+\d[A-Z]{2}$/.test(cleaned) ? cleaned.slice(0, -3) : cleaned);
+    var m = outward.match(/^([A-Z]{1,2})(\d{1,2})[A-Z]?$/); // trailing letter (EC1V) dropped — we match at district level
+    return m ? m[1] + m[2] : "";
+  }
+  // "core" (free delivery), "extended" (small delivery fee), "out" (a real
+  // postcode district we just don't recognise — collection instead), or
+  // null (couldn't parse a district at all, e.g. empty or gibberish input).
+  function deliveryZoneTier(raw) {
+    var d = postcodeDistrict(raw);
+    if (!d) return null;
+    if (CORE_ZONE.indexOf(d) !== -1) return "core";
+    if (EXTENDED_ZONE.indexOf(d) !== -1) return "extended";
+    return "out";
+  }
+  function inDeliveryZone(raw) {
+    var t = deliveryZoneTier(raw);
+    return t === "core" || t === "extended";
+  }
+  function deliveryFee(raw) {
+    return deliveryZoneTier(raw) === "extended" ? EXTENDED_DELIVERY_FEE : 0;
+  }
+
   // Set this once this specific menu is actually shared with families — the
   // Monday its first Mon-Wed delivery window begins. Example:
   //   var MENU_LIVE_FROM = new Date(2026, 8, 7); // Mon 7 Sep 2026 (month is 0-indexed, so 8 = September)
@@ -797,8 +920,11 @@
   function addDays(d, n) { var r = new Date(d); r.setDate(r.getDate() + n); r.setHours(0, 0, 0, 0); return r; }
   function addWeeks(d, n) { var r = new Date(d); r.setDate(r.getDate() + n * 7); return r; } // keeps time-of-day, unlike addDays
 
-  // Six windows per three-week rotation — this week's Mon–Wed and Thu–Sat,
-  // plus the following two weeks'. Two implementations:
+  // Six windows per three-week rotation — this week's Mon–Wed and Thu–Sun,
+  // plus the following two weeks'. Both cutoffs sit a consistent ~31 hours
+  // before their window opens (Saturday 5pm -> Monday; Tuesday 5pm ->
+  // Thursday), giving a full shop-then-cook day of breathing room rather
+  // than the old same-day-ish squeeze. Two implementations:
   // computeRollingWindows() (used while MENU_LIVE_FROM is null) always
   // finds the next six relative to today, rolling forward forever — fine
   // during setup, before this menu is actually live.
@@ -810,26 +936,26 @@
     return MENU_LIVE_FROM ? computeFixedRotationWindows(MENU_LIVE_FROM) : computeRollingWindows();
   }
   function computeRollingWindows() {
-    var sun0 = nextOccurrence(0, 12, 0), tue0 = nextOccurrence(2, 19, 0);
+    var sat0 = nextOccurrence(6, 17, 0), tue0 = nextOccurrence(2, 17, 0);
     return finalizeWindows([
-      { cutoff: sun0, start: addDays(sun0, 1), end: addDays(sun0, 3), dayLabel: "Mon–Wed" },
-      { cutoff: tue0, start: addDays(tue0, 2), end: addDays(tue0, 4), dayLabel: "Thu–Sat" },
-      { cutoff: addWeeks(sun0, 1), start: addDays(addWeeks(sun0, 1), 1), end: addDays(addWeeks(sun0, 1), 3), dayLabel: "Mon–Wed" },
-      { cutoff: addWeeks(tue0, 1), start: addDays(addWeeks(tue0, 1), 2), end: addDays(addWeeks(tue0, 1), 4), dayLabel: "Thu–Sat" },
-      { cutoff: addWeeks(sun0, 2), start: addDays(addWeeks(sun0, 2), 1), end: addDays(addWeeks(sun0, 2), 3), dayLabel: "Mon–Wed" },
-      { cutoff: addWeeks(tue0, 2), start: addDays(addWeeks(tue0, 2), 2), end: addDays(addWeeks(tue0, 2), 4), dayLabel: "Thu–Sat" }
+      { cutoff: sat0, start: addDays(sat0, 2), end: addDays(sat0, 4), dayLabel: "Mon–Wed" },
+      { cutoff: tue0, start: addDays(tue0, 2), end: addDays(tue0, 5), dayLabel: "Thu–Sun" },
+      { cutoff: addWeeks(sat0, 1), start: addDays(addWeeks(sat0, 1), 2), end: addDays(addWeeks(sat0, 1), 4), dayLabel: "Mon–Wed" },
+      { cutoff: addWeeks(tue0, 1), start: addDays(addWeeks(tue0, 1), 2), end: addDays(addWeeks(tue0, 1), 5), dayLabel: "Thu–Sun" },
+      { cutoff: addWeeks(sat0, 2), start: addDays(addWeeks(sat0, 2), 2), end: addDays(addWeeks(sat0, 2), 4), dayLabel: "Mon–Wed" },
+      { cutoff: addWeeks(tue0, 2), start: addDays(addWeeks(tue0, 2), 2), end: addDays(addWeeks(tue0, 2), 5), dayLabel: "Thu–Sun" }
     ]);
   }
   function computeFixedRotationWindows(monday) {
-    var sun0 = new Date(monday); sun0.setDate(sun0.getDate() - 1); sun0.setHours(12, 0, 0, 0);
-    var tue0 = new Date(monday); tue0.setDate(tue0.getDate() + 1); tue0.setHours(19, 0, 0, 0);
+    var sat0 = new Date(monday); sat0.setDate(sat0.getDate() - 2); sat0.setHours(17, 0, 0, 0);
+    var tue0 = new Date(monday); tue0.setDate(tue0.getDate() + 1); tue0.setHours(17, 0, 0, 0);
     var raw = [
-      { cutoff: sun0, start: addDays(sun0, 1), end: addDays(sun0, 3), dayLabel: "Mon–Wed" },
-      { cutoff: tue0, start: addDays(tue0, 2), end: addDays(tue0, 4), dayLabel: "Thu–Sat" },
-      { cutoff: addWeeks(sun0, 1), start: addDays(addWeeks(sun0, 1), 1), end: addDays(addWeeks(sun0, 1), 3), dayLabel: "Mon–Wed" },
-      { cutoff: addWeeks(tue0, 1), start: addDays(addWeeks(tue0, 1), 2), end: addDays(addWeeks(tue0, 1), 4), dayLabel: "Thu–Sat" },
-      { cutoff: addWeeks(sun0, 2), start: addDays(addWeeks(sun0, 2), 1), end: addDays(addWeeks(sun0, 2), 3), dayLabel: "Mon–Wed" },
-      { cutoff: addWeeks(tue0, 2), start: addDays(addWeeks(tue0, 2), 2), end: addDays(addWeeks(tue0, 2), 4), dayLabel: "Thu–Sat" }
+      { cutoff: sat0, start: addDays(sat0, 2), end: addDays(sat0, 4), dayLabel: "Mon–Wed" },
+      { cutoff: tue0, start: addDays(tue0, 2), end: addDays(tue0, 5), dayLabel: "Thu–Sun" },
+      { cutoff: addWeeks(sat0, 1), start: addDays(addWeeks(sat0, 1), 2), end: addDays(addWeeks(sat0, 1), 4), dayLabel: "Mon–Wed" },
+      { cutoff: addWeeks(tue0, 1), start: addDays(addWeeks(tue0, 1), 2), end: addDays(addWeeks(tue0, 1), 5), dayLabel: "Thu–Sun" },
+      { cutoff: addWeeks(sat0, 2), start: addDays(addWeeks(sat0, 2), 2), end: addDays(addWeeks(sat0, 2), 4), dayLabel: "Mon–Wed" },
+      { cutoff: addWeeks(tue0, 2), start: addDays(addWeeks(tue0, 2), 2), end: addDays(addWeeks(tue0, 2), 5), dayLabel: "Thu–Sun" }
     ];
     var now = new Date();
     return finalizeWindows(raw.filter(function (w) { return w.cutoff > now; })); // expired windows fall away, no replacement
@@ -1209,11 +1335,29 @@
         el.appendChild(row);
       });
     }
-    document.getElementById(totalId).textContent = fmt(total(items));
+    var postcode = document.getElementById("famPostcode").value.trim();
+    var fee = deliveryFee(postcode);
+    var deliveryRow = document.getElementById("orderDelivery");
+    if (deliveryRow) {
+      deliveryRow.hidden = fee <= 0;
+      document.getElementById("orderDeliveryFee").textContent = fmt(fee);
+    }
+    var subtotal = total(items);
+    var minNote = document.getElementById("minOrderNote");
+    if (minNote) {
+      if (items.length > 0 && subtotal < MINIMUM_ORDER) {
+        minNote.textContent = "Add " + fmt(MINIMUM_ORDER - subtotal) + " more to meet our " + fmt(MINIMUM_ORDER) + " minimum order.";
+        minNote.classList.add("is-visible");
+      } else {
+        minNote.classList.remove("is-visible");
+        minNote.textContent = "";
+      }
+    }
+    document.getElementById(totalId).textContent = fmt(subtotal + fee);
     return items;
   }
 
-  function buildMessage(items, name, notes) {
+  function buildMessage(items, name, notes, postcode) {
     if (!items.length) return "";
     var lines = [];
     lines.push("Off Your Plate order" + (name ? " — " + name : ""));
@@ -1227,8 +1371,20 @@
       byWindow[w.id].forEach(function (it) { lines.push("  " + it.qty + "x " + itemDisplayName(it) + " (" + fmt(it.price * it.qty) + ")"); });
     });
     lines.push("");
-    lines.push("Total: " + fmt(total(items)));
+    var fee = deliveryFee(postcode);
+    if (fee > 0) {
+      lines.push("Subtotal: " + fmt(total(items)));
+      lines.push("Delivery (extended zone): " + fmt(fee));
+    }
+    lines.push("Total: " + fmt(total(items) + fee));
     lines.push("Payment: cash on delivery");
+    if (postcode) {
+      var tier = deliveryZoneTier(postcode);
+      var zoneNote = tier === "core" ? " (core zone — free delivery)"
+        : tier === "extended" ? " (extended zone — delivery added)"
+        : " (outside delivery zone — collection)";
+      lines.push(""); lines.push("Postcode: " + postcode + zoneNote);
+    }
     if (notes) { lines.push(""); lines.push("Notes: " + notes); }
     return lines.join("\n");
   }
@@ -1273,28 +1429,30 @@
 
   function updateMobileBar(items) {
     var count = items.reduce(function (s, i) { return s + i.qty; }, 0);
+    var postcode = document.getElementById("famPostcode").value.trim();
     document.getElementById("mobileCount").textContent = count + (count === 1 ? " item" : " items");
-    document.getElementById("mobileTotal").textContent = fmt(total(items));
+    document.getElementById("mobileTotal").textContent = fmt(total(items) + deliveryFee(postcode));
   }
 
   // A stable fingerprint of "this exact order" — same items/quantities/
   // windows/name/notes. Order-independent (sorted by dish id) so re-render
   // order never breaks the comparison.
-  function orderSnapshot(items, name, notes) {
+  function orderSnapshot(items, name, notes, postcode) {
     var norm = items.slice()
       .sort(function (a, b) { return a.id < b.id ? -1 : a.id > b.id ? 1 : 0; })
       .map(function (i) { return i.id + ":" + i.qty + ":" + i.window + ":" + (i.sizeLabel || "") + ":" + (i.addOns || []).map(function (a) { return a.id; }).sort().join(","); })
       .join("|");
-    return norm + "||" + name + "||" + notes;
+    return norm + "||" + name + "||" + notes + "||" + postcode;
   }
 
   function updateSendLinks(items) {
     var name = document.getElementById("famName").value.trim();
     var notes = document.getElementById("famNotes").value.trim();
-    var msg = buildMessage(items, name, notes);
+    var postcode = document.getElementById("famPostcode").value.trim();
+    var msg = buildMessage(items, name, notes, postcode);
     var wa = document.getElementById("sendWhatsapp");
-    var disabled = items.length === 0;
-    var alreadySent = lastSentSnapshot !== null && orderSnapshot(items, name, notes) === lastSentSnapshot;
+    var disabled = items.length === 0 || total(items) < MINIMUM_ORDER;
+    var alreadySent = lastSentSnapshot !== null && orderSnapshot(items, name, notes, postcode) === lastSentSnapshot;
 
     wa.href = "https://wa.me/" + OWNER_WHATSAPP + "?text=" + encodeURIComponent(msg);
 
@@ -1315,7 +1473,8 @@
     var items = currentItems();
     var name = document.getElementById("famName").value.trim();
     var notes = document.getElementById("famNotes").value.trim();
-    var msg = buildMessage(items, name, notes);
+    var postcode = document.getElementById("famPostcode").value.trim();
+    var msg = buildMessage(items, name, notes, postcode);
     if (!msg) return;
     function fallback() {
       var ta = document.createElement("textarea");
@@ -1336,6 +1495,37 @@
 
   document.getElementById("famName").addEventListener("input", function () { updateSendLinks(currentItems()); });
   document.getElementById("famNotes").addEventListener("input", function () { updateSendLinks(currentItems()); });
+  // Friendly, non-blocking heads-up when a typed postcode falls outside
+  // DELIVERY_ZONE — never disables sending, since collection is always a
+  // fallback option (see buildMessage(), which also flags this to Michaela).
+  function refreshPostcodeNote() {
+    var raw = document.getElementById("famPostcode").value.trim();
+    var note = document.getElementById("postcodeNote");
+    note.classList.remove("zone-core", "zone-extended", "zone-out");
+    if (!raw) {
+      note.classList.remove("is-visible");
+      note.textContent = "";
+      return;
+    }
+    var tier = deliveryZoneTier(raw);
+    if (tier === "core") {
+      note.textContent = "Core zone — free delivery.";
+      note.classList.add("zone-core");
+    } else if (tier === "extended") {
+      note.textContent = "Extended zone — " + fmt(EXTENDED_DELIVERY_FEE) + " delivery added to your total.";
+      note.classList.add("zone-extended");
+    } else {
+      note.textContent = "Looks like you're outside our current delivery area — no problem, we'll be in touch to arrange a collection point instead.";
+      note.classList.add("zone-out");
+    }
+    note.classList.add("is-visible");
+  }
+  document.getElementById("famPostcode").addEventListener("input", function () {
+    // Fee depends on postcode, so re-run the full order refresh (not just
+    // updateSendLinks) to keep the order-panel total and mobile bar in sync.
+    onOrderChange();
+    refreshPostcodeNote();
+  });
 
   // Deliberately does NOT intercept the click with preventDefault() +
   // window.open(): a script-driven popup call is exactly what a sandboxed
@@ -1358,7 +1548,8 @@
       var items = currentItems();
       var name = document.getElementById("famName").value.trim();
       var notes = document.getElementById("famNotes").value.trim();
-      lastSentSnapshot = orderSnapshot(items, name, notes);
+      var postcode = document.getElementById("famPostcode").value.trim();
+      lastSentSnapshot = orderSnapshot(items, name, notes, postcode);
       updateSendLinks(items);
     });
   }
@@ -1493,4 +1684,6 @@
 })();
 </script>
 
-</body></html>
+
+</body>
+</html>
