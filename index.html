@@ -978,6 +978,25 @@
   var OWNER_WHATSAPP = "447884299705"; // +44 7884 299705, formatted for wa.me (no +, no leading 0)
   var SITE_URL = "https://off-your-plate-beta.vercel.app/"; // included in the referral message when present, omitted gracefully when not
 
+  // ---------------- site visit logging ----------------
+  // Fire-and-forget, best-effort — worth knowing about, never worth
+  // slowing the page down for or showing any UI about. A link can carry
+  // ?src=<tag> (a QR code on a flyer, a link in an ad) to tag where the
+  // hit came from; with no tag it's just logged as "direct". Only works
+  // on the real deployed site (this endpoint doesn't exist in a Claude
+  // artifact preview), and silently does nothing if it can't reach it.
+  (function logVisit() {
+    try {
+      var params = new URLSearchParams(location.search);
+      var source = (params.get("src") || "direct").toLowerCase().replace(/[^a-z0-9_-]/g, "").slice(0, 24) || "direct";
+      fetch("/api/log-visit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ source: source })
+      }).catch(function () {});
+    } catch (e) {}
+  })();
+
   // UK-mobile validation + the referral code encoding, shared in spirit
   // with order-tracker.html's decodeReferralCode() (see the long comment
   // there for why the code is built this way, and its trade-offs). This
