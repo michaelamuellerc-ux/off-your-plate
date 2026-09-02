@@ -399,6 +399,7 @@
   }
   .btn:disabled { opacity: .45; cursor: not-allowed; }
   .hint { font-size: 11.5px; color: var(--ink-faint); margin-top: var(--sp-2); line-height: 1.5; }
+  .hint-link { color: var(--accent-strong); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
 
   .delivery-zone {
     background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg);
@@ -589,17 +590,17 @@
         <p class="postcode-note" id="postcodeNote"></p>
         <div class="perk-fields">
           <label class="field" for="famDiscount">Discount code <span class="optional">(optional)</span></label>
-          <input class="field" id="famDiscount" type="text" placeholder="e.g. FIRST10" autocapitalize="characters" />
+          <input class="field" id="famDiscount" type="text" placeholder="e.g. FIRST10" autocapitalize="characters" autocomplete="off" />
           <label class="field" for="famReferral">Referred by <span class="optional">(optional)</span></label>
-          <input class="field" id="famReferral" type="text" placeholder="Friend's name" />
+          <input class="field" id="famReferral" type="text" placeholder="Friend's name" autocomplete="off" />
         </div>
         <label class="field" for="famNotes">Notes (allergies, swaps, anything else)</label>
         <textarea class="field" id="famNotes" rows="2" placeholder="Optional"></textarea>
         <div class="send-row">
           <a class="btn primary" id="sendWhatsapp" href="#" target="_top">Send via WhatsApp</a>
-          <button class="btn secondary" id="copyOrder" type="button">Copy order</button>
         </div>
-        <p class="hint">Sending opens WhatsApp with your order already typed out, ready to fire off to Michaela — no account needed. If it doesn't open, tap "Copy order" and paste it into a message yourself.</p>
+        <p class="hint">Sending opens WhatsApp with your order already typed out, ready to fire off to Michaela — no account needed.</p>
+        <p class="hint">Having issues? <a class="hint-link" href="mailto:michaela.mueller.c@gmail.com">Email me!</a></p>
       </aside>
     </div>
   </main>
@@ -881,7 +882,8 @@
     sweet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="9" cy="10" r="1" fill="currentColor" stroke="none"/><circle cx="14.5" cy="9.5" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="14.5" r="1" fill="currentColor" stroke="none"/><circle cx="9.5" cy="15" r="1" fill="currentColor" stroke="none"/></svg>',
     breakfast: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15h16"/><path d="M7 15a5 5 0 0 1 10 0"/><path d="M12 6v2M5.5 9.5l1.4 1.4M18.5 9.5l-1.4 1.4"/></svg>',
     snacks: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8.3c-3.4 0-6.1 2.8-6.1 6.5 0 3.3 2.2 6.2 4.5 6.2 1 0 1.4-.5 2.3-.5s1.3.5 2.3.5c2.3 0 4.6-3.1 4.6-6.5 0-3.5-2.4-6.2-5.4-6.2"/><path d="M12 8.3c-.2-1.7.6-3.1 2.3-3.8"/><path d="M9.6 5.3c1.3-.1 2.5.7 2.6 2"/></svg>',
-    bowl: '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 23a17 17 0 0 0 34 0"/><path d="M7 23c0-3 7.6-5.5 17-5.5S41 20 41 23"/><path d="M24 12.5V8"/><path d="M20.5 9.3c0 1.3 1 2 1 3.2"/></svg>'
+    bowl: '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 23a17 17 0 0 0 34 0"/><path d="M7 23c0-3 7.6-5.5 17-5.5S41 20 41 23"/><path d="M24 12.5V8"/><path d="M20.5 9.3c0 1.3 1 2 1 3.2"/></svg>',
+    check: '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="24" r="17"/><path d="M17 24.5l5 5 10-11"/></svg>'
   };
 
   var reduceMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
@@ -889,7 +891,7 @@
   // ---------------- state ----------------
   var state = { qty: {}, window: {}, addOns: {}, size: {}, variant: {}, batch: {} }; // addOns: dishId -> { addOnId: true/false }; size: dishId -> sizeId (for dishes with a `sizes` list, e.g. loaf sizes); variant/batch: dishId -> id (for dishes priced on two independent choices, e.g. the egg muffin cups)
   var WINDOWS = null; // computed once at init — see computeWindows()
-  var lastSentSnapshot = null; // set once WhatsApp actually opens for the current order — see orderSnapshot()
+  var justSent = false; // true right after resetOrderAfterSend() clears the cart — see renderOrder()
 
   function dishByIndex() {
     var map = {};
@@ -1053,11 +1055,13 @@
     minus.addEventListener("click", function () {
       var q = (state.qty[dishId] || 0) - 1;
       state.qty[dishId] = Math.max(0, q);
+      justSent = false;
       refresh(); bump(qtyEl); onOrderChange();
     });
     plus.addEventListener("click", function () {
       state.qty[dishId] = (state.qty[dishId] || 0) + 1;
       if (!state.window[dishId]) state.window[dishId] = WINDOWS.list[0].id;
+      justSent = false;
       refresh(); bump(qtyEl); onOrderChange();
     });
     refresh();
@@ -1350,7 +1354,9 @@
     if (!items.length) {
       var empty = document.createElement("div");
       empty.className = "order-empty";
-      empty.innerHTML = ICONS.bowl + '<p>Your plate’s empty — tap the <strong>+</strong> on anything that looks good.</p>';
+      empty.innerHTML = justSent
+        ? ICONS.check + '<p><strong>Order sent!</strong> We’ll be in touch to confirm. Placing another order? Tap the <strong>+</strong> on anything that looks good.</p>'
+        : ICONS.bowl + '<p>Your plate’s empty — tap the <strong>+</strong> on anything that looks good.</p>';
       el.appendChild(empty);
     } else {
       items.forEach(function (it) {
@@ -1472,17 +1478,6 @@
     document.getElementById("mobileTotal").textContent = fmt(total(items) + deliveryFee(postcode));
   }
 
-  // A stable fingerprint of "this exact order" — same items/quantities/
-  // windows/name/notes. Order-independent (sorted by dish id) so re-render
-  // order never breaks the comparison.
-  function orderSnapshot(items, name, notes, postcode, phone, discountCode, referredBy) {
-    var norm = items.slice()
-      .sort(function (a, b) { return a.id < b.id ? -1 : a.id > b.id ? 1 : 0; })
-      .map(function (i) { return i.id + ":" + i.qty + ":" + i.window + ":" + (i.sizeLabel || "") + ":" + (i.addOns || []).map(function (a) { return a.id; }).sort().join(","); })
-      .join("|");
-    return norm + "||" + name + "||" + notes + "||" + postcode + "||" + phone + "||" + discountCode + "||" + referredBy;
-  }
-
   function updateSendLinks(items) {
     var name = document.getElementById("famName").value.trim();
     var notes = document.getElementById("famNotes").value.trim();
@@ -1493,49 +1488,31 @@
     var msg = buildMessage(items, name, notes, postcode, phone, discountCode, referredBy);
     var wa = document.getElementById("sendWhatsapp");
     var disabled = items.length === 0 || total(items) < MINIMUM_ORDER;
-    var alreadySent = lastSentSnapshot !== null && orderSnapshot(items, name, notes, postcode, phone, discountCode, referredBy) === lastSentSnapshot;
 
     wa.href = "https://wa.me/" + OWNER_WHATSAPP + "?text=" + encodeURIComponent(msg);
-
-    if (alreadySent) {
-      wa.textContent = "Order sent ✓";
-      wa.classList.add("sent");
-      wa.style.pointerEvents = "none";
-      wa.style.opacity = 1;
-    } else {
-      wa.textContent = "Send via WhatsApp";
-      wa.classList.remove("sent");
-      wa.style.pointerEvents = disabled ? "none" : "auto";
-      wa.style.opacity = disabled ? .45 : 1;
-    }
+    wa.textContent = "Send via WhatsApp";
+    wa.style.pointerEvents = disabled ? "none" : "auto";
+    wa.style.opacity = disabled ? .45 : 1;
   }
 
-  document.getElementById("copyOrder").addEventListener("click", function () {
-    var items = currentItems();
-    var name = document.getElementById("famName").value.trim();
-    var notes = document.getElementById("famNotes").value.trim();
-    var postcode = document.getElementById("famPostcode").value.trim();
-    var phone = document.getElementById("famPhone").value.trim();
-    var discountCode = document.getElementById("famDiscount").value.trim();
-    var referredBy = document.getElementById("famReferral").value.trim();
-    var msg = buildMessage(items, name, notes, postcode, phone, discountCode, referredBy);
-    if (!msg) return;
-    function fallback() {
-      var ta = document.createElement("textarea");
-      ta.value = msg; ta.style.position = "fixed"; ta.style.opacity = "0";
-      document.body.appendChild(ta); ta.focus(); ta.select();
-      try { document.execCommand("copy"); flash(); } catch (e) { window.prompt("Copy this order:", msg); }
-      document.body.removeChild(ta);
-    }
-    function flash() {
-      var btn = document.getElementById("copyOrder");
-      var old = btn.textContent; btn.textContent = "Copied ✓";
-      setTimeout(function () { btn.textContent = old; }, 1600);
-    }
-    try {
-      navigator.clipboard.writeText(msg).then(flash, fallback);
-    } catch (e) { fallback(); }
-  });
+  // Clears the whole order — item selections and the contact/perk fields —
+  // once it's actually been handed off to Michaela, so returning to the
+  // site (or switching back from the WhatsApp app) shows a fresh, empty
+  // order instead of the one that was just sent. justSent flips the empty
+  // state's message (see renderOrder()) until the next item is added.
+  function resetOrderAfterSend() {
+    state.qty = {}; state.window = {}; state.addOns = {}; state.size = {}; state.variant = {}; state.batch = {};
+    document.getElementById("famName").value = "";
+    document.getElementById("famPhone").value = "";
+    document.getElementById("famPostcode").value = "";
+    document.getElementById("famDiscount").value = "";
+    document.getElementById("famReferral").value = "";
+    document.getElementById("famNotes").value = "";
+    justSent = true;
+    refreshPostcodeNote();
+    renderTiers();
+    onOrderChange();
+  }
 
   document.getElementById("famName").addEventListener("input", function () { updateSendLinks(currentItems()); });
   document.getElementById("famNotes").addEventListener("input", function () { updateSendLinks(currentItems()); });
@@ -1592,15 +1569,13 @@
     var el = document.getElementById(id);
     el.addEventListener("click", function () {
       if (el.style.pointerEvents === "none") return;
-      var items = currentItems();
-      var name = document.getElementById("famName").value.trim();
-      var notes = document.getElementById("famNotes").value.trim();
-      var postcode = document.getElementById("famPostcode").value.trim();
-      var phone = document.getElementById("famPhone").value.trim();
-      var discountCode = document.getElementById("famDiscount").value.trim();
-      var referredBy = document.getElementById("famReferral").value.trim();
-      lastSentSnapshot = orderSnapshot(items, name, notes, postcode, phone, discountCode, referredBy);
-      updateSendLinks(items);
+      // Deferred: the browser reads wa.href for the actual navigation right
+      // after this handler returns, so clearing the order here (which would
+      // rewrite wa.href to an empty message) would corrupt the very message
+      // that's about to be sent. Running the reset a tick later lets the
+      // navigation — or, on most phones, the app-switch to WhatsApp that
+      // never actually unloads this page — happen first either way.
+      setTimeout(resetOrderAfterSend, 0);
     });
   }
   wireSendButton("sendWhatsapp");
