@@ -4,6 +4,21 @@
 
 const PHONE_RE = /^\+44\d{10}$/;
 
+// Max separate orders any one delivery slot accepts (window-capacity.js
+// reads this to say a slot's full; record-order.js just counts against
+// it — the actual cap is enforced by the site showing sold-out slots,
+// see the long comment on refreshWindowCapacity() in lookbook.html).
+// Keep in sync with ORDER_CAP in lookbook.html.
+const ORDER_CAP = 10;
+
+// A window is identified by its start date ("YYYY-MM-DD") — see
+// windowDateKey() in lookbook.html — a plain string both sides agree on,
+// not parsed as a real date here.
+const WINDOW_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+function isValidWindowDate(d) {
+  return WINDOW_DATE_RE.test(d || "");
+}
+
 function isFirst10Code(code) {
   return (code || "").trim().toUpperCase() === "FIRST10";
 }
@@ -95,5 +110,7 @@ module.exports = {
   redisSet,
   redisIncr,
   redisSadd,
-  redisSmembers
+  redisSmembers,
+  ORDER_CAP,
+  isValidWindowDate
 };
