@@ -146,13 +146,13 @@
     z-index: 20;
     background: var(--bg);
     border-bottom: 1px solid var(--line);
-    padding: 18px 20px 14px;
+    padding: 20px 20px 18px;
     transition: box-shadow var(--dur-base) var(--ease-out);
   }
   header.top.scrolled { box-shadow: 0 6px 20px -14px rgba(35,40,31,0.35); }
-  .top-inner { max-width: 1180px; margin: 0 auto; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 10px 24px; }
+  .top-inner { max-width: 1180px; margin: 0 auto; }
   .brand { display: flex; align-items: baseline; gap: 10px; }
-  .brand h1 { margin: 0; font-size: 27px; font-weight: 700; }
+  .brand h1 { margin: 0; font-size: 30px; font-weight: 700; }
   .brand .tag {
     font-family: 'Fraunces', Georgia, serif;
     font-style: italic;
@@ -165,6 +165,14 @@
     .brand { flex-direction: column; align-items: flex-start; gap: 2px; }
     .brand .tag { font-size: 13px; white-space: normal; }
   }
+
+  /* A distinct band for "what's on offer right now and how to keep on top
+     of it" — cutoff windows plus the reminder opt-in — bounded by its own
+     rules so it reads as one unit, separate from the brand above and the
+     story/menu below rather than blurring into either. */
+  .order-window { background: var(--bg); border-bottom: 1px solid var(--line); padding: var(--sp-4) 20px var(--sp-5); }
+  .order-window-inner { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: var(--sp-3); }
+
   .cutoffs { display: flex; gap: var(--sp-3); overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; max-width: 100%; }
   .cutoffs::-webkit-scrollbar { display: none; }
   .cutoff-pill {
@@ -181,9 +189,9 @@
 
   main { padding-top: var(--sp-6); }
 
-  .intro { max-width: 62ch; margin-bottom: var(--sp-4); }
-  .intro p { color: var(--ink-soft); font-size: 15.5px; line-height: 1.6; margin: 0; }
-  .intro p + p { margin-top: var(--sp-2); }
+  .intro { max-width: 62ch; margin-bottom: var(--sp-3); }
+  .intro p { color: var(--ink-soft); font-size: 13.5px; line-height: 1.5; margin: 0; }
+  .intro p + p { margin-top: 5px; }
   .intro em { font-family: 'Fraunces', Georgia, serif; font-style: italic; color: var(--ink); font-weight: 500; }
 
   /* ---------- quick nav ---------- */
@@ -393,17 +401,23 @@
   .delivery-zone {
     background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg);
     padding: var(--sp-5) var(--sp-6); margin: 0 0 var(--sp-6); box-shadow: var(--shadow-sm);
-    display: flex; flex-direction: column; gap: var(--sp-2);
+    display: flex; flex-direction: column; gap: var(--sp-3);
+    width: fit-content; max-width: 100%;
   }
   .delivery-zone-head { display: flex; align-items: center; gap: 9px; }
   .delivery-zone-head svg { width: 19px; height: 19px; color: var(--accent); flex: none; }
   .delivery-zone-head h2 { margin: 0; font-size: 19px; }
-  .delivery-zone-lists { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-8); margin: 2px 0; }
-  .delivery-zone-label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-faint); margin-bottom: 3px; }
-  .delivery-zone-lists p { margin: 0; font-size: 13.5px; color: var(--ink); }
-  .delivery-zone .sub { margin: 0; color: var(--ink-soft); font-size: 13px; line-height: 1.6; max-width: 62ch; }
+  .delivery-zone-lists { display: flex; flex-wrap: wrap; gap: var(--sp-3) var(--sp-10); margin: 2px 0; }
+  .delivery-zone-label { display: flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+  .delivery-zone-label::before { content: ""; width: 7px; height: 7px; border-radius: 50%; flex: none; }
+  .delivery-zone-label.core { color: var(--accent-strong); }
+  .delivery-zone-label.core::before { background: var(--accent); }
+  .delivery-zone-label.extended { color: var(--gold); }
+  .delivery-zone-label.extended::before { background: var(--gold); }
+  .delivery-zone-lists p { margin: 0; font-family: 'IBM Plex Mono', monospace; font-size: 14.5px; font-weight: 600; color: var(--ink); }
+  .delivery-zone .sub { margin: 0; color: var(--ink-soft); font-size: 13px; line-height: 1.6; max-width: 46ch; }
 
-  .reminder-optin { display: flex; align-items: center; gap: 10px; margin: 0 0 var(--sp-6); padding: 11px 16px; background: var(--accent-soft); border-radius: var(--r-md); }
+  .reminder-optin { display: flex; align-items: center; gap: 10px; padding: 11px 16px; background: var(--accent-soft); border-radius: var(--r-md); }
   .reminder-optin svg { width: 18px; height: 18px; color: var(--accent-strong); flex: none; }
   .reminder-optin p { margin: 0; font-size: 13px; color: var(--ink); line-height: 1.5; }
   .reminder-link { color: var(--accent-strong); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
@@ -505,9 +519,18 @@
       <h1 class="display">Off Your Plate</h1>
       <span class="tag">Real food. Zero effort.</span>
     </div>
-    <div class="cutoffs" id="cutoffs"></div>
   </div>
 </header>
+
+<div class="order-window">
+  <div class="order-window-inner">
+    <div class="cutoffs" id="cutoffs"></div>
+    <div class="reminder-optin">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 4 1.5 5.5 2 6H4c.5-.5 2-2 2-6Z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg>
+      <p>Ordering later in the week? <a href="#" id="reminderLink" class="reminder-link" target="_top">Get a WhatsApp nudge</a> an hour before each cutoff, so you never miss a window.</p>
+    </div>
+  </div>
+</div>
 
 <div class="app">
   <main>
@@ -524,20 +547,15 @@
       </div>
       <div class="delivery-zone-lists">
         <div>
-          <span class="delivery-zone-label">Core zone · free delivery</span>
+          <span class="delivery-zone-label core">Core zone · free delivery</span>
           <p>N1 · N5 · N7 · EC1 · WC1 · NW1</p>
         </div>
         <div>
-          <span class="delivery-zone-label">Extended zone · £2.50 delivery</span>
+          <span class="delivery-zone-label extended">Extended zone · £2.50 delivery</span>
           <p>N4 · N16 · N19 · E1 · E2 · E8 · EC2 · NW5</p>
         </div>
       </div>
       <p class="sub">Somewhere else? No problem — you're still welcome to order, we'll just arrange a collection point instead of a doorstep drop-off.</p>
-    </div>
-
-    <div class="reminder-optin">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 4 1.5 5.5 2 6H4c.5-.5 2-2 2-6Z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg>
-      <p>Ordering later in the week? <a href="#" id="reminderLink" class="reminder-link" target="_top">Get a WhatsApp nudge</a> an hour before each cutoff, so you never miss a window.</p>
     </div>
 
     <nav class="quick-nav" id="quickNav" aria-label="Jump to a menu section"></nav>
@@ -708,7 +726,7 @@
       dishes: [
         { id: "snack-banana-oat-cookies", name: "2-Ingredient Banana Oat Cookies", blurb: "Soft, naturally sweet cookies with no added sugar, egg or flour — just banana and oats.", price: 10.00, unitLabel: "per batch (~10 cookies)" },
         { id: "snack-oat-nut-bars", name: "No-Bake Oat & Nut Butter Bars", blurb: "Chewy, no-bake bars that hold their shape at room temperature once set.", price: 12.00, unitLabel: "per batch (~12 bars)" },
-        { id: "snack-flatbread", name: "Loaded Flatbreads", blurb: "A soft yogurt flatbread, melted with cheese — pick your topping: plain, veggie, or pepperoni. Two per order.", sizes: [
+        { id: "snack-flatbread", name: "Loaded Flatbreads", blurb: "A soft yogurt flatbread, melted with cheese — pick your topping: plain, veggie, or pepperoni.", unitLabel: "2 per order", sizes: [
             { id: "cheese", label: "Cheese Only", price: 10.00 },
             { id: "veg", label: "Cheese & Veg", price: 10.00 },
             { id: "pepperoni", label: "Cheese & Pepperoni", price: 12.00 }
