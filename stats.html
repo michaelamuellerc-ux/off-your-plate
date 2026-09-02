@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Site visits — Off Your Plate</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+  :root {
+    --bg: #F6F4EE; --surface: #FFFFFF; --surface-sunken: #EFEBDF;
+    --ink: #23281F; --ink-soft: #5B6355; --ink-faint: #8A9081;
+    --accent: #3F6B4A; --accent-strong: #2F5238; --accent-ink: #FFFFFF; --accent-soft: #E7EEE3;
+    --line: #E1DACA; --danger: #A8442F; --danger-soft: #F5E1DA;
+    --shadow: 0 1px 2px rgba(35,40,31,0.06), 0 10px 28px -12px rgba(35,40,31,0.18);
+    --r-sm: 8px; --r-md: 11px; --r-lg: 16px; --r-xl: 20px; --r-pill: 999px;
+    --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px; --sp-6: 24px; --sp-8: 32px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1F2318; --surface: #2E3327; --surface-sunken: #262A1F;
+      --ink: #F5F2E7; --ink-soft: #C4C7B7; --ink-faint: #9BA18C;
+      --accent: #7ECB74; --accent-strong: #A8D89E; --accent-ink: #0E1109; --accent-soft: #2F3B27;
+      --line: #3A4030; --danger: #E08469; --danger-soft: #3D2B22;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 10px 28px -12px rgba(0,0,0,0.5);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: 'Public Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 14px; line-height: 1.5;
+  }
+  .display { font-family: 'Fraunces', Georgia, serif; font-weight: 600; letter-spacing: -0.01em; }
+  .mono { font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; }
+
+  header.top { padding: 28px 20px 20px; border-bottom: 1px solid var(--line); background: var(--surface); }
+  header.top .inner { max-width: 860px; margin: 0 auto; }
+  header.top h1 { margin: 0 0 4px; font-size: 22px; }
+  header.top p { margin: 0; color: var(--ink-soft); font-size: 13px; max-width: 62ch; }
+
+  main { max-width: 860px; margin: 0 auto; padding: var(--sp-6) 20px var(--sp-8); }
+
+  .gate { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-xl); box-shadow: var(--shadow); padding: var(--sp-6); max-width: 420px; margin: var(--sp-8) auto 0; }
+  .gate h2 { margin: 0 0 4px; font-size: 16px; }
+  .gate p { margin: 0 0 var(--sp-4); color: var(--ink-soft); font-size: 12.5px; }
+  .gate input { width: 100%; border: 1px solid var(--line); border-radius: var(--r-md); padding: 9px 12px; background: var(--surface-sunken); color: var(--ink); font: inherit; font-size: 13.5px; margin-bottom: var(--sp-3); }
+  .gate input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .gate button { width: 100%; border: none; border-radius: var(--r-md); padding: 10px 16px; font-size: 13.5px; font-weight: 700; background: var(--accent); color: var(--accent-ink); cursor: pointer; font-family: inherit; }
+  .gate .err { color: var(--danger); font-size: 12.5px; margin-top: var(--sp-3); min-height: 1em; }
+  [hidden] { display: none !important; }
+
+  .stats { display: flex; gap: var(--sp-3); flex-wrap: wrap; margin-bottom: var(--sp-6); }
+  .stat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 10px 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+  .stat .num { font-family: 'IBM Plex Mono', monospace; font-size: 19px; font-weight: 600; color: var(--accent); display: block; }
+  .stat .lbl { font-size: 11.5px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .04em; }
+
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-xl); box-shadow: var(--shadow); padding: var(--sp-5); }
+  .panel h2 { margin: 0 0 3px; font-size: 16px; }
+  .panel .sub { margin: 0 0 var(--sp-4); color: var(--ink-soft); font-size: 12.5px; }
+
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-faint); font-weight: 600; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+  td { padding: 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  .bar-row { display: flex; align-items: center; gap: 8px; min-width: 160px; }
+  .bar-track { flex: 1; height: 8px; border-radius: var(--r-pill); background: var(--surface-sunken); overflow: hidden; }
+  .bar-fill { height: 100%; background: var(--accent); border-radius: var(--r-pill); }
+  .src-pill { display: inline-block; padding: 2px 8px; border-radius: var(--r-pill); font-size: 11px; font-weight: 700; background: var(--accent-soft); color: var(--accent-strong); margin: 0 4px 4px 0; }
+  .empty { color: var(--ink-faint); font-size: 13px; padding: var(--sp-6) 0; text-align: center; }
+  .reload-row { display: flex; align-items: center; gap: 10px; margin-bottom: var(--sp-4); }
+  .reload-row button { border: 1px solid var(--line); background: var(--surface-sunken); color: var(--ink); border-radius: var(--r-pill); padding: 6px 14px; font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="inner">
+    <h1 class="display">Site visits</h1>
+    <p>Daily hits to Off Your Plate, split out by where they came from — tag a link with <code>?src=flyer1</code> (or whatever you like) to tell it apart from direct traffic.</p>
+  </div>
+</header>
+
+<main>
+  <div class="gate" id="gate">
+    <h2>Enter your stats key</h2>
+    <p>The one you set as STATS_KEY on Vercel. It's remembered on this device.</p>
+    <input type="password" id="keyInput" placeholder="Stats key" autocomplete="off">
+    <button type="button" id="unlockBtn">View stats</button>
+    <p class="err" id="gateErr"></p>
+  </div>
+
+  <div id="statsView" hidden>
+    <div class="reload-row">
+      <button type="button" id="reloadBtn">Refresh</button>
+      <span id="reloadFlash" style="font-size:12.5px;color:var(--ink-soft);"></span>
+    </div>
+    <div class="stats" id="statCards"></div>
+    <section class="panel">
+      <h2>By day</h2>
+      <p class="sub">Last 30 days, newest first.</p>
+      <div class="table-wrap">
+        <table id="statsTable" hidden>
+          <thead><tr><th>Date</th><th>Total</th><th>Relative</th><th>By source</th></tr></thead>
+          <tbody id="statsBody"></tbody>
+        </table>
+        <div class="empty" id="statsEmpty">No visits logged yet.</div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  var STORAGE_KEY = "oyp_stats_key";
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function fmtDate(iso) {
+    var d = new Date(iso + "T00:00:00Z");
+    if (isNaN(d.getTime())) return iso;
+    return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+  }
+
+  var gate = document.getElementById("gate");
+  var gateErr = document.getElementById("gateErr");
+  var keyInput = document.getElementById("keyInput");
+  var statsView = document.getElementById("statsView");
+  var reloadFlash = document.getElementById("reloadFlash");
+
+  function renderStats(days) {
+    var totalAll = days.reduce(function (sum, d) { return sum + d.total; }, 0);
+    var last7 = days.slice(0, 7).reduce(function (sum, d) { return sum + d.total; }, 0);
+    var maxTotal = days.reduce(function (m, d) { return Math.max(m, d.total); }, 0) || 1;
+
+    document.getElementById("statCards").innerHTML =
+      '<div class="stat"><span class="num mono">' + totalAll + '</span><span class="lbl">Visits (shown range)</span></div>' +
+      '<div class="stat"><span class="num mono">' + last7 + '</span><span class="lbl">Last 7 days</span></div>' +
+      '<div class="stat"><span class="num mono">' + days.length + '</span><span class="lbl">Days with any hits</span></div>';
+
+    var table = document.getElementById("statsTable");
+    var body = document.getElementById("statsBody");
+    var empty = document.getElementById("statsEmpty");
+    if (!days.length) {
+      table.hidden = true;
+      empty.hidden = false;
+      return;
+    }
+    table.hidden = false;
+    empty.hidden = true;
+    body.innerHTML = days.map(function (d) {
+      var sources = Object.keys(d.bySource).sort(function (a, b) { return d.bySource[b] - d.bySource[a]; });
+      var srcHtml = sources.map(function (s) {
+        return '<span class="src-pill">' + esc(s) + ": " + d.bySource[s] + "</span>";
+      }).join("") || '<span style="color:var(--ink-faint)">—</span>';
+      var pct = Math.round((d.total / maxTotal) * 100);
+      return "<tr>" +
+        '<td class="mono">' + esc(fmtDate(d.date)) + "</td>" +
+        '<td class="mono">' + d.total + "</td>" +
+        '<td><div class="bar-row"><div class="bar-track"><div class="bar-fill" style="width:' + pct + '%"></div></div></div></td>' +
+        "<td>" + srcHtml + "</td>" +
+        "</tr>";
+    }).join("");
+  }
+
+  function loadStats(key) {
+    gateErr.textContent = "";
+    return fetch("/api/visit-stats?key=" + encodeURIComponent(key) + "&days=30")
+      .then(function (res) {
+        if (!res.ok) throw new Error("bad key");
+        return res.json();
+      })
+      .then(function (data) {
+        try { localStorage.setItem(STORAGE_KEY, key); } catch (e) {}
+        gate.hidden = true;
+        statsView.hidden = false;
+        renderStats(data.days || []);
+        return true;
+      })
+      .catch(function () {
+        gateErr.textContent = "Couldn't load stats with that key — check STATS_KEY on Vercel matches what you typed here.";
+        return false;
+      });
+  }
+
+  document.getElementById("unlockBtn").addEventListener("click", function () {
+    var key = keyInput.value.trim();
+    if (!key) return;
+    loadStats(key);
+  });
+  keyInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") document.getElementById("unlockBtn").click();
+  });
+
+  document.getElementById("reloadBtn").addEventListener("click", function () {
+    var key = (function () { try { return localStorage.getItem(STORAGE_KEY) || ""; } catch (e) { return ""; } })();
+    if (!key) return;
+    reloadFlash.textContent = "Refreshing…";
+    loadStats(key).then(function (ok) {
+      reloadFlash.textContent = ok ? "Updated ✓" : "";
+      if (ok) setTimeout(function () { reloadFlash.textContent = ""; }, 1800);
+    });
+  });
+
+  // Remembered key on this device — skip straight to the stats.
+  (function tryStoredKey() {
+    var stored;
+    try { stored = localStorage.getItem(STORAGE_KEY); } catch (e) { stored = null; }
+    if (stored) {
+      keyInput.value = stored;
+      loadStats(stored);
+    }
+  })();
+})();
+</script>
+
+</body>
+</html>
