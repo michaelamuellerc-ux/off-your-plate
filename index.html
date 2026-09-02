@@ -1,4 +1,9 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Off Your Plate</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Off Your Plate</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
 
@@ -133,6 +138,31 @@
   }
   @media (min-width: 900px) {
     .app { padding-bottom: var(--sp-12); }
+  }
+
+  .promo-banner {
+    background: linear-gradient(90deg, var(--accent-strong), var(--accent));
+    color: var(--accent-ink);
+    overflow: hidden;
+    white-space: nowrap;
+    padding: 8px 0;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .promo-track { display: inline-flex; gap: 56px; padding-left: 56px; width: max-content; }
+  .promo-item { display: inline-flex; align-items: center; gap: 6px; }
+  .promo-item b { text-transform: uppercase; letter-spacing: .05em; }
+  @media (prefers-reduced-motion: no-preference) {
+    .promo-track { animation: promoSlide 18s linear infinite; }
+  }
+  @keyframes promoSlide {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .promo-banner { text-align: center; }
+    .promo-track { display: block; padding-left: 0; }
+    .promo-track .promo-item:nth-child(2) { display: none; }
   }
 
   header.top {
@@ -373,6 +403,20 @@
   .postcode-note { display: none; font-size: 11px; color: var(--gold); margin: -4px 0 8px; line-height: 1.45; }
   .postcode-note.is-visible { display: block; }
   .postcode-note.zone-core { color: var(--accent); }
+  .delivery-method-toggle {
+    display: flex; gap: 6px; overflow: hidden; max-height: 0; opacity: 0; margin-top: 0;
+    transition: max-height var(--dur-base) var(--ease-out), opacity var(--dur-base) var(--ease-out), margin-top var(--dur-base) var(--ease-out);
+  }
+  .delivery-method-toggle.is-visible { max-height: 60px; opacity: 1; margin-top: -2px; margin-bottom: 8px; }
+  .delivery-method-toggle button {
+    flex: 1; border: 1px solid var(--line); background: var(--surface-sunken); color: var(--ink-soft);
+    border-radius: var(--r-sm); padding: 6px 8px; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 1px; line-height: 1.2;
+    transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+  }
+  .delivery-method-toggle .sz-label { font-size: 11.5px; font-weight: 700; }
+  .delivery-method-toggle .sz-price { font-size: 11px; opacity: .85; font-family: 'IBM Plex Mono', monospace; }
+  .delivery-method-toggle button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
   .perk-fields { margin-bottom: 8px; }
   .perk-fields summary {
     cursor: pointer; list-style: none; font-size: 12px; font-weight: 600; color: var(--ink-soft);
@@ -518,7 +562,17 @@
     .dish-row .card:nth-child(1) { animation-delay: calc(var(--i, 0) * 70ms + 90ms); }
     .dish-row .card:nth-child(2) { animation-delay: calc(var(--i, 0) * 70ms + 160ms); }
   }
-</style></head><body>
+</style>
+</head>
+<body>
+
+
+<div class="promo-banner" role="note" aria-label="Promotion">
+  <div class="promo-track">
+    <span class="promo-item">Use discount code <b>FIRST10</b> to get 10% off your first order!</span>
+    <span class="promo-item" aria-hidden="true">Use discount code <b>FIRST10</b> to get 10% off your first order!</span>
+  </div>
+</div>
 
 <header class="top">
   <div class="top-inner">
@@ -555,11 +609,11 @@
       <div class="delivery-zone-lists">
         <div>
           <span class="delivery-zone-label core">Core zone · free delivery</span>
-          <p>N1 · N5 · N7 · EC1 · WC1 · NW1</p>
+          <p>N1 · N5 · N7 · EC1 · N16 · E2 · E8</p>
         </div>
         <div>
-          <span class="delivery-zone-label extended">Extended zone · £2.50 delivery</span>
-          <p>N4 · N16 · N19 · E1 · E2 · E8 · EC2 · NW5</p>
+          <span class="delivery-zone-label extended">Extended zone · £3.50 delivery</span>
+          <p>WC1 · NW1 · N4 · E1 · EC2 · NW5 · E5 · E9</p>
         </div>
       </div>
       <p class="sub">Somewhere else? No problem — you're still welcome to order, we'll just arrange a collection point instead of a doorstep drop-off.</p>
@@ -600,13 +654,21 @@
         <label class="field" for="famPostcode">Postcode</label>
         <input class="field" id="famPostcode" type="text" placeholder="e.g. N1 2AB" autocapitalize="characters" />
         <p class="postcode-note" id="postcodeNote"></p>
+        <div class="delivery-method-toggle" id="deliveryMethodToggle">
+          <button type="button" id="methodDelivery" aria-pressed="true">
+            <span class="sz-label">Delivery</span><span class="sz-price" id="methodDeliveryPrice"></span>
+          </button>
+          <button type="button" id="methodCollect" aria-pressed="false">
+            <span class="sz-label">I'll collect</span><span class="sz-price">Free</span>
+          </button>
+        </div>
         <details class="perk-fields">
           <summary>Have a discount code or referral? <span class="chevron">▾</span></summary>
           <div class="perk-fields-body">
             <label class="field" for="famDiscount">Discount code</label>
-            <input class="field" id="famDiscount" type="text" placeholder="e.g. FIRST10" autocapitalize="characters" autocomplete="off" />
+            <input class="field" id="famDiscount" type="text" placeholder="Optional" autocapitalize="characters" autocomplete="new-password" data-lpignore="true" data-1p-ignore="true" data-form-type="other" />
             <label class="field" for="famReferral">Referred by</label>
-            <input class="field" id="famReferral" type="text" placeholder="Friend's name" autocomplete="off" />
+            <input class="field" id="famReferral" type="text" placeholder="Optional" autocomplete="new-password" data-lpignore="true" data-1p-ignore="true" data-form-type="other" />
           </div>
         </details>
         <label class="field" for="famNotes">Notes (allergies, swaps, anything else)</label>
@@ -833,9 +895,9 @@
   // extended (still workable, but longer or more occasional, small fee).
   // Keep both lists in sync with the "Where we deliver" panel in the HTML
   // above if either changes.
-  var CORE_ZONE = ["N1", "N5", "N7", "EC1", "WC1", "NW1"];
-  var EXTENDED_ZONE = ["N4", "N16", "N19", "E1", "E2", "E8", "EC2", "NW5"];
-  var EXTENDED_DELIVERY_FEE = 2.5;
+  var CORE_ZONE = ["N1", "N5", "N7", "EC1", "N16", "E2", "E8"];
+  var EXTENDED_ZONE = ["WC1", "NW1", "N4", "E1", "EC2", "NW5", "E5", "E9"];
+  var EXTENDED_DELIVERY_FEE = 3.5;
   // Minimum order, measured against food alone — an extended-zone family
   // shouldn't have to buy extra food just because their delivery fee pushed
   // them over the line. Delivery fee is added afterwards, on top.
@@ -872,6 +934,7 @@
     return t === "core" || t === "extended";
   }
   function deliveryFee(raw) {
+    if (wantsCollection) return 0;
     return deliveryZoneTier(raw) === "extended" ? EXTENDED_DELIVERY_FEE : 0;
   }
 
@@ -907,6 +970,13 @@
   var state = { qty: {}, window: {}, addOns: {}, size: {}, variant: {}, batch: {} }; // addOns: dishId -> { addOnId: true/false }; size: dishId -> sizeId (for dishes with a `sizes` list, e.g. loaf sizes); variant/batch: dishId -> id (for dishes priced on two independent choices, e.g. the egg muffin cups)
   var WINDOWS = null; // computed once at init — see computeWindows()
   var justSent = false; // true right after resetOrderAfterSend() clears the cart — see renderOrder()
+  // true when an extended-zone customer has chosen to collect instead of
+  // paying the delivery fee (see the delivery-method toggle in
+  // refreshPostcodeNote()). Only meaningful while the postcode is actually
+  // in the extended zone — refreshPostcodeNote() resets it the moment the
+  // postcode moves out of that zone, so it never silently carries over to
+  // a different address.
+  var wantsCollection = false;
 
   function dishByIndex() {
     var map = {};
@@ -1504,7 +1574,7 @@
       if (postcode) {
         var tier = deliveryZoneTier(postcode);
         var zoneNote = tier === "core" ? " (core zone — free delivery)"
-          : tier === "extended" ? " (extended zone — delivery added)"
+          : tier === "extended" ? (wantsCollection ? " (extended zone — collecting instead of delivery)" : " (extended zone — delivery added)")
           : " (outside delivery zone — collection)";
         lines.push("Postcode: " + postcode + zoneNote);
       }
@@ -1607,6 +1677,7 @@
     document.getElementById("famReferral").value = "";
     document.getElementById("famNotes").value = "";
     justSent = true;
+    wantsCollection = false;
     refreshPostcodeNote();
     renderTiers();
     onOrderChange();
@@ -1616,6 +1687,31 @@
   document.getElementById("famSurname").addEventListener("input", function () { updateSendLinks(currentItems()); });
   document.getElementById("famNotes").addEventListener("input", function () { updateSendLinks(currentItems()); });
   document.getElementById("famPhone").addEventListener("input", function () { updateSendLinks(currentItems()); });
+  // Discount/referral must only ever hold what THIS customer actually typed
+  // — never a value the browser injects on its own. autocomplete="off" is
+  // widely ignored by Chrome/Safari's own remembered-value autofill, and
+  // that autofill can strike at any point in the session (not just on
+  // load), e.g. the moment the field is focused, or as a side effect of
+  // filling in the name/phone fields above it — so a one-shot clear isn't
+  // enough. Instead, track whether a real keystroke/paste/IME composition
+  // has happened in the field; if a value shows up WITHOUT one, it wasn't
+  // typed by the customer, so reject it outright before it can reach the
+  // WhatsApp message. Registered before the plain input listener below so
+  // it runs first and scrubs the value before that listener reads it.
+  function guardAgainstAutofill(id) {
+    var el = document.getElementById(id);
+    var userDriven = false;
+    function markDriven() { userDriven = true; }
+    el.addEventListener("keydown", markDriven, true);
+    el.addEventListener("compositionstart", markDriven, true);
+    el.addEventListener("paste", markDriven, true);
+    el.addEventListener("input", function () {
+      if (!userDriven && el.value) el.value = "";
+    }, true);
+  }
+  guardAgainstAutofill("famDiscount");
+  guardAgainstAutofill("famReferral");
+
   document.getElementById("famDiscount").addEventListener("input", function () { updateSendLinks(currentItems()); });
   document.getElementById("famReferral").addEventListener("input", function () { updateSendLinks(currentItems()); });
 
@@ -1639,10 +1735,15 @@
   function refreshPostcodeNote() {
     var raw = document.getElementById("famPostcode").value.trim();
     var note = document.getElementById("postcodeNote");
+    var methodToggle = document.getElementById("deliveryMethodToggle");
     note.classList.remove("zone-core", "zone-extended", "zone-out");
     if (!raw) {
       note.classList.remove("is-visible");
       note.textContent = "";
+      methodToggle.classList.remove("is-visible");
+      wantsCollection = false;
+      document.getElementById("methodDelivery").setAttribute("aria-pressed", "true");
+      document.getElementById("methodCollect").setAttribute("aria-pressed", "false");
       return;
     }
     var tier = deliveryZoneTier(raw);
@@ -1650,14 +1751,45 @@
       note.textContent = "Core zone — free delivery.";
       note.classList.add("zone-core");
     } else if (tier === "extended") {
-      note.textContent = "Extended zone — " + fmt(EXTENDED_DELIVERY_FEE) + " delivery added to your total.";
+      note.textContent = wantsCollection
+        ? "Extended zone — you're collecting instead, no delivery fee."
+        : "Extended zone — " + fmt(EXTENDED_DELIVERY_FEE) + " delivery added to your total.";
       note.classList.add("zone-extended");
     } else {
       note.textContent = "Looks like you're outside our current delivery area — no problem, we'll be in touch to arrange a collection point instead.";
       note.classList.add("zone-out");
     }
     note.classList.add("is-visible");
+
+    // The delivery/collect choice only makes sense while actually in the
+    // extended zone — core is already free, and outside the zone is
+    // collection-only anyway — so the toggle (and any prior choice) only
+    // shows/persists there. Leaving the extended zone resets it rather than
+    // silently carrying a stale choice over to a different address.
+    if (tier === "extended") {
+      methodToggle.classList.add("is-visible");
+    } else {
+      methodToggle.classList.remove("is-visible");
+      wantsCollection = false;
+    }
+    // Single source of truth for the buttons' pressed state: whatever set
+    // wantsCollection (a click, or this function resetting it on a zone
+    // change) ends up here, so the buttons can never drift out of sync with
+    // the variable that actually drives the fee.
+    document.getElementById("methodDelivery").setAttribute("aria-pressed", wantsCollection ? "false" : "true");
+    document.getElementById("methodCollect").setAttribute("aria-pressed", wantsCollection ? "true" : "false");
   }
+  document.getElementById("methodDeliveryPrice").textContent = "+" + fmt(EXTENDED_DELIVERY_FEE);
+  document.getElementById("methodDelivery").addEventListener("click", function () {
+    wantsCollection = false;
+    refreshPostcodeNote();
+    onOrderChange();
+  });
+  document.getElementById("methodCollect").addEventListener("click", function () {
+    wantsCollection = true;
+    refreshPostcodeNote();
+    onOrderChange();
+  });
   document.getElementById("famPostcode").addEventListener("input", function () {
     // Fee depends on postcode, so re-run the full order refresh (not just
     // updateSendLinks) to keep the order-panel total and mobile bar in sync.
@@ -1823,4 +1955,6 @@
 })();
 </script>
 
-</body></html>
+
+</body>
+</html>
