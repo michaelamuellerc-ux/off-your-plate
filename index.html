@@ -358,6 +358,14 @@
   }
   .window-toggle button[aria-pressed="true"] .wt-qty { background: var(--accent-ink); color: var(--accent); }
   .window-toggle-caption { grid-column: 1 / -1; font-size: 10.5px; color: var(--ink-faint); margin: -1px 0 1px; }
+  /* A slot that's hit its order cap for this cycle — visibly unavailable,
+     not styled as an error (it's not broken, just full), and never the
+     pressed/accent look even if it was selected before it filled. */
+  .window-toggle button:disabled {
+    background: transparent; border-style: dashed; color: var(--ink-faint);
+    cursor: not-allowed; opacity: .7;
+  }
+  .window-toggle button:disabled[aria-pressed="true"] { background: transparent; color: var(--ink-faint); }
 
   .addon-check {
     display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
@@ -978,6 +986,17 @@
   var OWNER_WHATSAPP = "447884299705"; // +44 7884 299705, formatted for wa.me (no +, no leading 0)
   var SITE_URL = "https://off-your-plate-beta.vercel.app/"; // included in the referral message when present, omitted gracefully when not
 
+  // Max separate orders (checkouts) any one delivery slot will accept —
+  // must match ORDER_CAP in site/api/_lib/codes.js exactly, since that's
+  // the number actually enforced server-side. This copy only drives what
+  // the page shows; changing just this one wouldn't change the real cap.
+  var ORDER_CAP = 10;
+  // windowId -> true, filled in by refreshWindowCapacity() once it hears
+  // back from the backend — empty (nothing sold out) until then, and left
+  // empty for good in a Claude artifact preview or if the endpoint can't
+  // be reached, so a database hiccup never falsely blocks a slot.
+  var SOLD_OUT_WINDOWS = {};
+
   // ---------------- site visit logging ----------------
   // Fire-and-forget, best-effort — worth knowing about, never worth
   // slowing the page down for or showing any UI about. A link can carry
@@ -1346,6 +1365,49 @@
     return info.dayLabel + " (" + formatRange(info.start, info.end) + ")";
   }
 
+  // ---------------- per-slot order cap ----------------
+  // The key that ties a window to a real-world date, shared with the
+  // backend (window-capacity.js/record-order.js) — window.id ("w0", "w1"…)
+  // is just this page's own array index and shifts as old windows expire,
+  // so it can't be what the server counts against.
+  function windowDateKey(w) { return w.start.toISOString().slice(0, 10); }
+
+  // The window a dish's stepper/toggle defaults to — the first one that
+  // isn't sold out, so adding a dish never silently starts a line in a
+  // slot that's already full. Falls back to the very first window if
+  // every slot is full, rather than crashing — recordOrderWindowsIfAny()
+  // and the sold-out Send-block below are what actually stop that order
+  // going through, not this pick.
+  function defaultWindowId() {
+    for (var i = 0; i < WINDOWS.list.length; i++) {
+      if (!SOLD_OUT_WINDOWS[WINDOWS.list[i].id]) return WINDOWS.list[i].id;
+    }
+    return WINDOWS.list[0].id;
+  }
+
+  // Best-effort, non-blocking: asks the backend how many separate orders
+  // each upcoming slot has already had, and marks any at/over ORDER_CAP as
+  // sold out. Runs once at load and again periodically, so browsing the
+  // page for a while doesn't leave a slot showing open long after it's
+  // actually filled — never assumed to be perfectly fresh, which is why
+  // Send is re-checked against this same data at the moment it's clicked.
+  function refreshWindowCapacity() {
+    if (!WINDOWS || !WINDOWS.list.length) return;
+    var dates = WINDOWS.list.map(windowDateKey).join(",");
+    fetch("/api/window-capacity?windows=" + encodeURIComponent(dates))
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        var counts = (data && data.counts) || {};
+        var next = {};
+        WINDOWS.list.forEach(function (w) {
+          if ((counts[windowDateKey(w)] || 0) >= ORDER_CAP) next[w.id] = true;
+        });
+        SOLD_OUT_WINDOWS = next;
+        onOrderChange();
+      })
+      .catch(function () {}); // artifact preview or offline — leave slots as-is
+  }
+
   function renderCutoffs() {
     var el = document.getElementById("cutoffs");
     el.innerHTML = WINDOWS.list.map(function (w) {
@@ -1405,7 +1467,7 @@
     // in more than one slot at once.
     function currentWindowId() {
       var configKey = dishLineKey(dishId, dish);
-      return state.window[configKey] || WINDOWS.list[0].id;
+      return state.window[configKey] || defaultWindowId();
     }
     function refresh() { qtyEl.textContent = state.qty[dishQtyKey(dishId, dish, currentWindowId())] || 0; }
     minus.addEventListener("click", function () {
@@ -1416,6 +1478,11 @@
       refresh(); bump(qtyEl); onOrderChange();
     });
     plus.addEventListener("click", function () {
+      // A slot that's filled up while this card was already showing it
+      // (see refreshWindowCapacity) shouldn't quietly accept more — the
+      // window toggle itself makes this state visible; this just backs
+      // that up so the stepper can't add to a full slot either.
+      if (SOLD_OUT_WINDOWS[currentWindowId()]) return;
       var key = dishQtyKey(dishId, dish, currentWindowId());
       state.qty[key] = (state.qty[key] || 0) + 1;
       justSent = false;
@@ -1446,10 +1513,13 @@
       b.type = "button";
       b.dataset.window = info.id;
       var q = state.qty[qtyKeyFromConfig(configKey, info.id)] || 0;
-      b.innerHTML = '<span class="wt-days">' + info.dayLabel + '</span><span class="wt-dates">' + formatRangeShort(info.start, info.end) + '</span>' +
+      var soldOut = !!SOLD_OUT_WINDOWS[info.id];
+      b.innerHTML = '<span class="wt-days">' + info.dayLabel + '</span><span class="wt-dates">' + (soldOut ? "Sold out" : formatRangeShort(info.start, info.end)) + '</span>' +
         (q > 0 ? '<span class="wt-qty">' + q + '×</span>' : '');
-      b.setAttribute("aria-pressed", (state.window[configKey] || WINDOWS.list[0].id) === info.id ? "true" : "false");
+      b.disabled = soldOut;
+      b.setAttribute("aria-pressed", (state.window[configKey] || defaultWindowId()) === info.id ? "true" : "false");
       b.addEventListener("click", function () {
+        if (SOLD_OUT_WINDOWS[info.id]) return;
         state.window[dishLineKey(dishId, dish)] = info.id;
         wrap.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
         b.setAttribute("aria-pressed", "true");
@@ -1914,7 +1984,7 @@
       if (!entry) return;
       var configKey = dishLineKey(id, entry.dish);
       w.classList.toggle("is-visible", configQtyTotal(configKey) > 0);
-      var selected = state.window[configKey] || WINDOWS.list[0].id;
+      var selected = state.window[configKey] || defaultWindowId();
       w.querySelectorAll("button").forEach(function (btn) {
         var windowId = btn.dataset.window;
         btn.setAttribute("aria-pressed", windowId === selected ? "true" : "false");
@@ -1928,6 +1998,13 @@
         } else if (badge) {
           badge.remove();
         }
+        // Reflect the latest capacity check (see refreshWindowCapacity) —
+        // this can flip a button to sold-out well after it was first drawn.
+        var soldOut = !!SOLD_OUT_WINDOWS[windowId];
+        btn.disabled = soldOut;
+        var datesEl = btn.querySelector(".wt-dates");
+        var winInfo = WINDOWS.byId[windowId];
+        if (datesEl && winInfo) datesEl.textContent = soldOut ? "Sold out" : formatRangeShort(winInfo.start, winInfo.end);
       });
     });
     // A variant/batch/size or slot button click changes which line this
@@ -2232,6 +2309,35 @@
     } catch (e) { /* fetch unavailable/blocked — best-effort only */ }
   }
 
+  // Same fire-and-forget spirit, for the per-slot order cap: counts this
+  // checkout once against EACH distinct slot it actually uses (one order
+  // touching both this week's and next week's slot counts against both —
+  // it's a real delivery in each). Never blocks Send itself; the cap is
+  // enforced by keeping slots visibly sold out (see refreshWindowCapacity/
+  // soldOutWindowMessage) — this just makes that count real, since a
+  // scripted preventDefault()-then-navigate here is exactly what phones
+  // tend to block (see the long comment on wireSendButton below).
+  function recordOrderWindowsIfAny(items) {
+    if (!items.length) return;
+    var seen = {};
+    var dates = [];
+    items.forEach(function (it) {
+      var info = WINDOWS.byId[it.window];
+      if (!info || seen[it.window]) return;
+      seen[it.window] = true;
+      dates.push(windowDateKey(info));
+    });
+    if (!dates.length) return;
+    try {
+      fetch("/api/record-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ windows: dates }),
+        keepalive: true
+      }).catch(function () {});
+    } catch (e) { /* fetch unavailable/blocked — best-effort only */ }
+  }
+
   // Kept as the old name so nothing else in this file needs to change —
   // now just an alias for the fuller check above.
   function refreshDiscountWarning() {
@@ -2259,6 +2365,25 @@
     return "Please add your " + list + " to send your order.";
   }
 
+  // Catches the case where a slot the customer picked earlier fills up
+  // while they're still browsing/filling in the form — refreshWindowCapacity()
+  // keeps SOLD_OUT_WINDOWS current, this just checks the order actually in
+  // the cart against it right before Send is allowed to go through.
+  function soldOutWindowMessage(items) {
+    var labels = [];
+    var seen = {};
+    items.forEach(function (it) {
+      if (SOLD_OUT_WINDOWS[it.window] && !seen[it.window]) {
+        seen[it.window] = true;
+        labels.push(windowFullLabel(it.window));
+      }
+    });
+    if (!labels.length) return "";
+    var list = labels.length === 1 ? labels[0] : labels.join(" and ");
+    var isAre = labels.length === 1 ? "slot is" : "slots are";
+    return "The " + list + " " + isAre + " fully booked now — remove those items or pick a different slot to send your order.";
+  }
+
   function updateSendLinks(items) {
     var firstName = document.getElementById("famFirstName").value.trim();
     var surname = document.getElementById("famSurname").value.trim();
@@ -2275,17 +2400,22 @@
     // number) blocks sending outright until it's cleared — same treatment
     // as a missing required field, not just a warning.
     var codeError = activeCodeErrorReason();
+    var soldOutMsg = soldOutWindowMessage(items);
     var requiredNote = document.getElementById("requiredFieldsNote");
     if (requiredNote) {
-      if (items.length > 0 && missingMsg) {
-        requiredNote.textContent = missingMsg;
+      // Missing fields take priority (it's the more basic problem); a
+      // slot that's sold out only gets shown once there's actually
+      // something in it and nothing more fundamental to fix first.
+      var noteMsg = items.length > 0 ? (missingMsg || soldOutMsg) : "";
+      if (noteMsg) {
+        requiredNote.textContent = noteMsg;
         requiredNote.classList.add("is-visible");
       } else {
         requiredNote.textContent = "";
         requiredNote.classList.remove("is-visible");
       }
     }
-    var disabled = items.length === 0 || total(items) < MINIMUM_ORDER || !!missingMsg || !!codeError;
+    var disabled = items.length === 0 || total(items) < MINIMUM_ORDER || !!missingMsg || !!codeError || !!soldOutMsg;
 
     wa.href = "https://wa.me/" + OWNER_WHATSAPP + "?text=" + encodeURIComponent(msg);
     wa.textContent = "Send via WhatsApp";
@@ -2455,6 +2585,7 @@
         markFirst10UsedOnThisDevice();
       }
       recordCodeUsageIfAny();
+      recordOrderWindowsIfAny(currentItems());
       // Deferred: the browser reads wa.href for the actual navigation right
       // after this handler returns, so clearing the order here (which would
       // rewrite wa.href to an empty message) would corrupt the very message
@@ -2615,6 +2746,11 @@
     renderQuickNav();
     wireQuickNavObserver();
     onOrderChange();
+    refreshWindowCapacity();
+    // Keeps sold-out slots current for anyone who lingers on the page a
+    // while — a slot filling up mid-browse shouldn't stay looking open
+    // until the next full page load.
+    setInterval(refreshWindowCapacity, 60000);
   }
 })();
 </script>
