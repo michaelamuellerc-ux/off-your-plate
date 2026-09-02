@@ -404,6 +404,9 @@
   .order-delivery { display: flex; justify-content: space-between; align-items: baseline; padding: 0 10px; margin: -2px 0 6px; font-size: 12px; color: var(--ink-soft); }
   .order-delivery[hidden] { display: none; }
   .order-delivery .amt { font-family: 'IBM Plex Mono', monospace; }
+  .order-discount { display: flex; justify-content: space-between; align-items: baseline; padding: 0 10px; margin: -2px 0 6px; font-size: 12px; color: var(--accent-strong); font-weight: 600; }
+  .order-discount[hidden] { display: none; }
+  .order-discount .amt { font-family: 'IBM Plex Mono', monospace; }
   .order-total { display: flex; justify-content: space-between; align-items: baseline; background: var(--accent-soft); border-radius: var(--r-md); padding: 7px 10px; margin-bottom: 8px; }
   .order-total .label { font-size: 13px; color: var(--ink-soft); }
   .order-total .amt { font-family: 'IBM Plex Mono', monospace; font-size: 18px; font-weight: 600; color: var(--accent); }
@@ -656,7 +659,7 @@
     </div>
     <div class="referral-optin">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      <p>Know someone who'd love this? <button type="button" id="referralLink" class="referral-link">Refer a friend</button> and you'll both get something back.</p>
+      <p>Know someone who'd love this? <button type="button" id="referralLink" class="referral-link">Refer a friend</button> — they get £10 off their first order, and you get £10 off your next one.</p>
     </div>
   </div>
 </div>
@@ -675,7 +678,7 @@
 <div class="reminder-modal" id="referralModal" role="dialog" aria-modal="true" aria-labelledby="referralModalTitle">
   <button type="button" class="reminder-modal-close" id="referralModalClose" aria-label="Close">✕</button>
   <h3 id="referralModalTitle" class="display">Refer a friend</h3>
-  <p>We'll open WhatsApp with a message to your friend, and their own one-time code baked in. Once they place their first order with it, you'll get a one-time reward code of your own.</p>
+  <p>We'll open WhatsApp with a message to your friend, and their own one-time code baked in — worth £10 off their first order. Once they place it, you'll get a one-time reward code of your own, worth £10 off your next order.</p>
   <label class="field" for="referralModalYourPhone">Your WhatsApp number</label>
   <input class="field" id="referralModalYourPhone" type="text" placeholder="e.g. 07700 900123" />
   <label class="field" for="referralModalFriendPhone">Your friend's WhatsApp number</label>
@@ -720,6 +723,10 @@
         <h2 class="display">Your order</h2>
         <p class="sub">Review, then send it straight to Michaela.</p>
         <div class="order-items" id="orderItems"></div>
+        <div class="order-discount" id="orderDiscount" hidden>
+          <span class="label" id="orderDiscountLabel">Discount</span>
+          <span class="amt mono" id="orderDiscountAmt">-£0.00</span>
+        </div>
         <div class="order-delivery" id="orderDelivery" hidden>
           <span class="label">Delivery (extended zone)</span>
           <span class="amt mono" id="orderDeliveryFee">£0.00</span>
@@ -1090,7 +1097,7 @@
       if (ready) {
         var code = encodeReferralCode(yourDigits);
         var msg = "Hi! 👋 I've been getting my meals from Off Your Plate (batch-cooked, seriously good, zero effort) and thought you'd like it too."
-          + " Use my code " + code + " for a little something off your first order"
+          + " Use my code " + code + " for £10 off your first order"
           + (SITE_URL ? ": " + SITE_URL : ".");
         sendLink.href = "https://wa.me/44" + friendDigits + "?text=" + encodeURIComponent(msg);
       } else {
@@ -1803,6 +1810,9 @@
       document.getElementById("orderDeliveryFee").textContent = fmt(fee);
     }
     var subtotal = total(items);
+    // The minimum order is measured against the food subtotal BEFORE any
+    // discount — it's about there being enough of a cooking/delivery run to
+    // be worth it, not about what ends up being collected.
     var minNote = document.getElementById("minOrderNote");
     if (minNote) {
       if (items.length > 0 && subtotal < MINIMUM_ORDER) {
@@ -1813,7 +1823,16 @@
         minNote.textContent = "";
       }
     }
-    document.getElementById(totalId).textContent = fmt(subtotal + fee);
+    var discount = computeDiscount(subtotal, document.getElementById("famDiscount").value);
+    var discountRow = document.getElementById("orderDiscount");
+    if (discountRow) {
+      discountRow.hidden = !(items.length > 0 && discount.amount > 0);
+      if (!discountRow.hidden) {
+        document.getElementById("orderDiscountLabel").textContent = discountLabel(discount.kind);
+        document.getElementById("orderDiscountAmt").textContent = "-" + fmt(discount.amount);
+      }
+    }
+    document.getElementById(totalId).textContent = fmt(subtotal - discount.amount + fee);
     return items;
   }
 
@@ -1831,12 +1850,24 @@
       byWindow[w.id].forEach(function (it) { lines.push("  " + it.qty + "x " + itemDisplayName(it) + " (" + fmt(it.price * it.qty) + ")"); });
     });
     lines.push("");
+    var subtotal = total(items);
     var fee = deliveryFee(postcode);
+    var discount = computeDiscount(subtotal, discountCode);
+    // "Subtotal:" only needs to appear when Total is going to differ from it
+    // (a fee added, a discount taken off, or both) — otherwise Total already
+    // IS the food subtotal and a duplicate line would just be clutter. Kept
+    // as plain "Label: value" lines (see the comment below) on purpose: the
+    // order-tracker tool parses these verbatim, discount line included.
+    if (fee > 0 || discount.amount > 0) {
+      lines.push("Subtotal: " + fmt(subtotal));
+    }
+    if (discount.amount > 0) {
+      lines.push("Discount: -" + fmt(discount.amount) + " (" + discountLabel(discount.kind) + ")");
+    }
     if (fee > 0) {
-      lines.push("Subtotal: " + fmt(total(items)));
       lines.push("Delivery (extended zone): " + fmt(fee));
     }
-    lines.push("Total: " + fmt(total(items) + fee));
+    lines.push("Total: " + fmt(subtotal - discount.amount + fee));
     lines.push("Payment: cash on delivery");
     // Contact/perk block — each line only appears when filled, but they all
     // share one leading blank line so the message never gets doubled gaps.
@@ -1926,8 +1957,10 @@
   function updateMobileBar(items) {
     var count = items.reduce(function (s, i) { return s + i.qty; }, 0);
     var postcode = document.getElementById("famPostcode").value.trim();
+    var subtotal = total(items);
+    var discount = computeDiscount(subtotal, document.getElementById("famDiscount").value);
     document.getElementById("mobileCount").textContent = count + (count === 1 ? " item" : " items");
-    document.getElementById("mobileTotal").textContent = fmt(total(items) + deliveryFee(postcode));
+    document.getElementById("mobileTotal").textContent = fmt(subtotal - discount.amount + deliveryFee(postcode));
   }
 
   // ---------------- discount/referral code checking ----------------
@@ -1977,6 +2010,60 @@
     for (var i = 0; i < digits.length; i++) checksum += parseInt(digits[i], 10);
     if ((checksum % 36).toString(36).toUpperCase() !== m[2]) return null;
     return digits;
+  }
+
+  // Reward codes (RWD-xxxxx) are minted and tracked entirely inside the
+  // Tracker's own storage — this site has no way to reach that store, so it
+  // can only recognise the FORMAT, never confirm a specific code is real or
+  // still unused. The discount still applies optimistically once it looks
+  // like a reward code (see computeDiscount below); the Tracker remains the
+  // one place that actually enforces one-time use for these.
+  function isRewardCode(code) {
+    return /^RWD[A-Z0-9]{5}$/.test((code || "").trim().toUpperCase());
+  }
+
+  // The three codes this site knows about, and exactly what each is worth —
+  // matching the Tracker's own rules so the numbers never disagree:
+  //   FIRST10  — 10% off the food subtotal (never the delivery fee)
+  //   referral — a flat £10 off the food subtotal, for a new customer's
+  //              first order
+  //   reward   — a flat £10 off the food subtotal, for a referrer redeeming
+  //              their one-time reward code
+  // All three are capped so a discount can never exceed what's actually in
+  // the cart, and none of them ever touch the delivery fee — that's always
+  // added back on afterwards, in full.
+  var FLAT_DISCOUNT_AMOUNT = 10;
+
+  function round2(n) { return Math.round(n * 100) / 100; }
+
+  // null when there's nothing to discount, or a self-referral / already-
+  // redeemed error is currently blocking the code outright — a blocked code
+  // is never worth anything, on screen or in the total.
+  function detectCodeKind(code) {
+    if (activeCodeErrorReason()) return null;
+    var raw = (code || "").trim();
+    if (!raw) return null;
+    if (isFirst10Code(raw)) return "first10";
+    if (decodeReferralCode(raw)) return "referral";
+    if (isRewardCode(raw)) return "reward";
+    return null;
+  }
+
+  function discountLabel(kind) {
+    return kind === "first10" ? "FIRST10 (10% off)"
+      : kind === "referral" ? "Referral code (£10 off)"
+      : kind === "reward" ? "Reward code (£10 off)"
+      : "";
+  }
+
+  // subtotal is food only, before any delivery fee — matches how the
+  // minimum order is measured, and how the promo copy describes each perk
+  // ("...off your total before delivery").
+  function computeDiscount(subtotal, code) {
+    var kind = detectCodeKind(code);
+    if (!kind) return { kind: null, amount: 0 };
+    var amount = kind === "first10" ? round2(subtotal * 0.10) : Math.min(FLAT_DISCOUNT_AMOUNT, subtotal);
+    return { kind: kind, amount: amount };
   }
 
   var CODE_CHECK_MESSAGES = {
@@ -2037,24 +2124,25 @@
       errorEl.classList.add("is-visible");
       checkingEl.classList.remove("is-visible");
       warningEl.classList.remove("is-visible");
-      updateSendLinks(currentItems());
-      return;
+    } else {
+      errorEl.classList.remove("is-visible");
+      if (codeCheckState.checking) {
+        checkingEl.classList.add("is-visible");
+        warningEl.classList.remove("is-visible");
+      } else {
+        checkingEl.classList.remove("is-visible");
+        // No definitive answer (backend unreachable, or nothing to check
+        // yet) — fall back to the soft, same-device-only heuristic.
+        var code = document.getElementById("famDiscount").value;
+        warningEl.classList.toggle("is-visible", isFirst10Code(code) && first10UsedOnThisDevice());
+      }
     }
-    errorEl.classList.remove("is-visible");
-
-    if (codeCheckState.checking) {
-      checkingEl.classList.add("is-visible");
-      warningEl.classList.remove("is-visible");
-      updateSendLinks(currentItems());
-      return;
-    }
-    checkingEl.classList.remove("is-visible");
-
-    // No definitive answer (backend unreachable, or nothing to check yet)
-    // — fall back to the soft, same-device-only heuristic.
-    var code = document.getElementById("famDiscount").value;
-    warningEl.classList.toggle("is-visible", isFirst10Code(code) && first10UsedOnThisDevice());
-    updateSendLinks(currentItems());
+    // A single refresh point at the end (rather than one per branch above)
+    // so the order panel's discount row/total, the mobile bar and Send's
+    // enabled state all stay in lockstep with whichever note just changed —
+    // a code becoming valid/invalid changes what's actually being charged,
+    // not just what warning is showing.
+    onOrderChange();
   }
 
   function scheduleBackendCodeCheck() {
