@@ -20,6 +20,8 @@
     --accent-soft: #E7EEE3;
     --gold: #B7791F;
     --gold-soft: #F3E6CB;
+    --danger: #A8442F;
+    --danger-soft: #F5E1DA;
     --line: #E1DACA;
     --tier-veg: #4E7C4A;
     --tier-chicken: #B7791F;
@@ -57,6 +59,8 @@
       --accent-soft: #2F3B27;
       --gold: #EAB05F;
       --gold-soft: #45341C;
+      --danger: #E08469;
+      --danger-soft: #3D2B22;
       --line: #4F5642;
       --tier-veg: #7ED975;
       --tier-chicken: #F0B15E;
@@ -88,6 +92,8 @@
     --accent-soft: #2F3B27;
     --gold: #EAB05F;
     --gold-soft: #45341C;
+    --danger: #E08469;
+    --danger-soft: #3D2B22;
     --line: #4F5642;
     --tier-veg: #7ED975;
     --tier-chicken: #F0B15E;
@@ -407,6 +413,10 @@
   .postcode-note.is-visible { display: block; }
   .discount-warning-note { display: none; font-size: 11px; color: var(--gold); margin: -2px 0 8px; line-height: 1.45; }
   .discount-warning-note.is-visible { display: block; }
+  .discount-error-note { display: none; font-size: 11.5px; color: var(--danger); margin: -2px 0 8px; line-height: 1.45; font-weight: 600; }
+  .discount-error-note.is-visible { display: block; }
+  .discount-checking-note { display: none; font-size: 11px; color: var(--ink-faint); margin: -2px 0 8px; line-height: 1.45; font-style: italic; }
+  .discount-checking-note.is-visible { display: block; }
   .postcode-note.zone-core { color: var(--accent); }
   .delivery-method-toggle {
     display: flex; gap: 6px; overflow: hidden; max-height: 0; opacity: 0; margin-top: 0;
@@ -735,6 +745,8 @@
           <div class="perk-fields-body">
             <label class="field" for="famDiscount">Discount code</label>
             <input class="field" id="famDiscount" type="text" placeholder="Optional" autocapitalize="characters" autocomplete="new-password" data-lpignore="true" data-1p-ignore="true" data-form-type="other" />
+            <p class="discount-checking-note" id="discountCheckingNote">Checking code…</p>
+            <p class="discount-error-note" id="discountErrorNote"></p>
             <p class="discount-warning-note" id="discountWarningNote">It looks like FIRST10 has already been used on this device — it may not be honoured twice.</p>
             <label class="field" for="famReferral">Referred by</label>
             <input class="field" id="famReferral" type="text" placeholder="Optional" autocomplete="new-password" data-lpignore="true" data-1p-ignore="true" data-form-type="other" />
@@ -1855,16 +1867,31 @@
     document.getElementById("mobileTotal").textContent = fmt(total(items) + deliveryFee(postcode));
   }
 
-  // FIRST10 reuse warning — a soft, same-device-only heads-up, not a real
-  // check against Michaela's order history: this site and the Tracker she
-  // uses are two separate pages with no shared storage (see the referral
-  // code comment further down for the full reason), so there's no way to
-  // ask "has this PHONE NUMBER used FIRST10 before" from here. What IS
-  // knowable locally is "has FIRST10 been sent from THIS device before" —
-  // localStorage, set the moment an order is actually sent with FIRST10
-  // applied. That catches the common accidental case (someone forgetting
-  // they'd already used it) without blocking a genuine second family
-  // member ordering from a shared device — it's a warning, never a block.
+  // ---------------- discount/referral code checking ----------------
+  //
+  // Two layers, in priority order:
+  //
+  //  1. A REAL check against a small serverless endpoint (/api/check-code)
+  //     that looks a phone number up by ACTUAL history — this is the
+  //     genuine "has this number used this code before" answer. It only
+  //     works on the real deployed site: a Claude artifact preview can't
+  //     reach any outside server at all (the fetch below simply fails
+  //     there, silently), so this layer just isn't available in preview.
+  //     One check needs no network at all and is therefore ALWAYS
+  //     available, preview included: whether a referral code decodes to
+  //     the same phone number that's placing the order (self-referral) —
+  //     that's pure arithmetic, not a lookup.
+  //
+  //  2. A soft, same-device-only fallback (localStorage) for whenever the
+  //     real check can't run or hasn't answered yet — catches the common
+  //     accidental case (forgetting FIRST10 was already used) without
+  //     ever blocking sending. This is what this site had before the
+  //     backend existed, and it's still what a Claude artifact preview
+  //     falls back to, silently, since it can never reach the backend.
+  //
+  // Neither layer ever disables the Send button — the goal is only that
+  // nobody submits believing they're getting a discount that won't
+  // actually be honoured.
   function isFirst10Code(code) {
     return (code || "").trim().toUpperCase() === "FIRST10";
   }
@@ -1874,10 +1901,163 @@
   function first10UsedOnThisDevice() {
     try { return localStorage.getItem("oyp_first10_used") === "1"; } catch (e) { return false; }
   }
-  function refreshDiscountWarning() {
+
+  // Mirrors decodeReferralCode() in the Tracker — recovers the referrer's
+  // 10-digit national number straight out of the code, no lookup needed.
+  function decodeReferralCode(code) {
+    var m = (code || "").trim().toUpperCase().match(/^REF([0-9A-Z]{7})([0-9A-Z])$/);
+    if (!m) return null;
+    var n = parseInt(m[1], 36);
+    if (isNaN(n) || n < 7000000000 || n > 7999999999) return null;
+    var digits = String(n);
+    var checksum = 0;
+    for (var i = 0; i < digits.length; i++) checksum += parseInt(digits[i], 10);
+    if ((checksum % 36).toString(36).toUpperCase() !== m[2]) return null;
+    return digits;
+  }
+
+  var CODE_CHECK_MESSAGES = {
+    "first10-reused": "This code has already been used on this number — it won't be applied. You're welcome to order at full price!",
+    "referral-reused": "You've already used a referral code before — this one won't be applied. You're welcome to order at full price!",
+    "self-referral": "That's your own referral code — it can't be used on your own order."
+  };
+
+  var codeCheckState = {
+    seq: 0,
+    backendResult: null, // {valid, reason, usedOn} from the last completed backend answer, or null
+    checking: false // true while a backend call for the CURRENT code+phone is in flight
+  };
+  var codeCheckDebounceTimer = null;
+  var CODE_CHECK_DEBOUNCE_MS = 450;
+  var CODE_CHECK_TIMEOUT_MS = 3000;
+
+  // Pure, local, always-available — no backend needed.
+  function localCodeIssue() {
+    var codeRaw = document.getElementById("famDiscount").value.trim();
+    var phoneDigits = ukMobileDigits(document.getElementById("famPhone").value);
+    if (!codeRaw || !phoneDigits) return null;
+    var decoded = decodeReferralCode(codeRaw);
+    if (decoded && decoded === phoneDigits) return "self-referral";
+    return null;
+  }
+
+  // The single place that decides which of the three notes (if any) is
+  // showing — so exactly one can ever be visible at a time.
+  function renderCodeChecks() {
+    var checkingEl = document.getElementById("discountCheckingNote");
+    var errorEl = document.getElementById("discountErrorNote");
+    var warningEl = document.getElementById("discountWarningNote");
+
+    // A stale backendResult from a since-edited phone/code pair must never
+    // render — the debounce timer that would null it out hasn't fired yet
+    // (it waits CODE_CHECK_DEBOUNCE_MS), so gate on the CURRENT fields
+    // still being non-empty rather than waiting for that timer.
+    var codeRaw = document.getElementById("famDiscount").value.trim();
+    var phoneDigits = ukMobileDigits(document.getElementById("famPhone").value);
+    var localIssue = localCodeIssue();
+    var backendReason = (codeRaw && phoneDigits && codeCheckState.backendResult && codeCheckState.backendResult.valid === false)
+      ? codeCheckState.backendResult.reason : null;
+    var reason = localIssue || backendReason;
+
+    if (reason) {
+      errorEl.textContent = CODE_CHECK_MESSAGES[reason] || "This code isn't valid for this order.";
+      errorEl.classList.add("is-visible");
+      checkingEl.classList.remove("is-visible");
+      warningEl.classList.remove("is-visible");
+      return;
+    }
+    errorEl.classList.remove("is-visible");
+
+    if (codeCheckState.checking) {
+      checkingEl.classList.add("is-visible");
+      warningEl.classList.remove("is-visible");
+      return;
+    }
+    checkingEl.classList.remove("is-visible");
+
+    // No definitive answer (backend unreachable, or nothing to check yet)
+    // — fall back to the soft, same-device-only heuristic.
     var code = document.getElementById("famDiscount").value;
-    var note = document.getElementById("discountWarningNote");
-    note.classList.toggle("is-visible", isFirst10Code(code) && first10UsedOnThisDevice());
+    warningEl.classList.toggle("is-visible", isFirst10Code(code) && first10UsedOnThisDevice());
+  }
+
+  function scheduleBackendCodeCheck() {
+    clearTimeout(codeCheckDebounceTimer);
+    codeCheckDebounceTimer = setTimeout(runBackendCodeCheck, CODE_CHECK_DEBOUNCE_MS);
+  }
+
+  function runBackendCodeCheck() {
+    var codeRaw = document.getElementById("famDiscount").value.trim();
+    var phoneDigits = ukMobileDigits(document.getElementById("famPhone").value);
+    var mySeq = ++codeCheckState.seq;
+
+    if (!codeRaw || !phoneDigits) {
+      codeCheckState.backendResult = null;
+      codeCheckState.checking = false;
+      renderCodeChecks();
+      return;
+    }
+
+    codeCheckState.checking = true;
+    renderCodeChecks();
+
+    var controller = (typeof AbortController !== "undefined") ? new AbortController() : null;
+    var timeoutId = controller ? setTimeout(function () { controller.abort(); }, CODE_CHECK_TIMEOUT_MS) : null;
+
+    fetch("/api/check-code", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone: "+44" + phoneDigits, code: codeRaw }),
+      signal: controller ? controller.signal : undefined
+    }).then(function (r) {
+      if (timeoutId) clearTimeout(timeoutId);
+      if (!r.ok) throw new Error("bad status " + r.status);
+      return r.json();
+    }).then(function (result) {
+      if (mySeq !== codeCheckState.seq) return; // superseded by a newer keystroke
+      codeCheckState.backendResult = result;
+      codeCheckState.checking = false;
+      renderCodeChecks();
+    }).catch(function () {
+      // Expected and silent in a Claude artifact preview (fetch is blocked
+      // entirely there) — renderCodeChecks() below falls back to the soft
+      // same-device warning either way.
+      if (timeoutId) clearTimeout(timeoutId);
+      if (mySeq !== codeCheckState.seq) return;
+      codeCheckState.backendResult = null;
+      codeCheckState.checking = false;
+      renderCodeChecks();
+    });
+  }
+
+  function onDiscountRelevantInputChanged() {
+    renderCodeChecks();
+    scheduleBackendCodeCheck();
+  }
+
+  // Best-effort record of real usage, called the moment an order is
+  // actually sent (see wireSendButton below) — same non-blocking spirit
+  // as markFirst10UsedOnThisDevice(), just backed by the real store when
+  // one is reachable. keepalive lets the request finish even though the
+  // page hands off to wa.me right after.
+  function recordCodeUsageIfAny() {
+    var codeRaw = document.getElementById("famDiscount").value.trim();
+    var phoneDigits = ukMobileDigits(document.getElementById("famPhone").value);
+    if (!codeRaw || !phoneDigits) return;
+    try {
+      fetch("/api/record-usage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: "+44" + phoneDigits, code: codeRaw }),
+        keepalive: true
+      }).catch(function () {});
+    } catch (e) { /* fetch unavailable/blocked — best-effort only */ }
+  }
+
+  // Kept as the old name so nothing else in this file needs to change —
+  // now just an alias for the fuller check above.
+  function refreshDiscountWarning() {
+    onDiscountRelevantInputChanged();
   }
 
   function updateSendLinks(items) {
@@ -1915,6 +2095,10 @@
     document.getElementById("famNotes").value = "";
     justSent = true;
     wantsCollection = false;
+    codeCheckState.backendResult = null;
+    codeCheckState.checking = false;
+    codeCheckState.seq++; // invalidate any check still in flight for the order just sent
+    renderCodeChecks();
     refreshPostcodeNote();
     renderTiers();
     onOrderChange();
@@ -1923,7 +2107,7 @@
   document.getElementById("famFirstName").addEventListener("input", function () { updateSendLinks(currentItems()); });
   document.getElementById("famSurname").addEventListener("input", function () { updateSendLinks(currentItems()); });
   document.getElementById("famNotes").addEventListener("input", function () { updateSendLinks(currentItems()); });
-  document.getElementById("famPhone").addEventListener("input", function () { updateSendLinks(currentItems()); });
+  document.getElementById("famPhone").addEventListener("input", function () { updateSendLinks(currentItems()); onDiscountRelevantInputChanged(); });
   // Discount/referral must only ever hold what THIS customer actually typed
   // — never a value the browser injects on its own. autocomplete="off" is
   // widely ignored by Chrome/Safari's own remembered-value autofill, and
@@ -2056,6 +2240,7 @@
       if (isFirst10Code(document.getElementById("famDiscount").value)) {
         markFirst10UsedOnThisDevice();
       }
+      recordCodeUsageIfAny();
       // Deferred: the browser reads wa.href for the actual navigation right
       // after this handler returns, so clearing the order here (which would
       // rewrite wa.href to an empty message) would corrupt the very message
