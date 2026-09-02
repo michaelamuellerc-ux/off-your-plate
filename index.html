@@ -166,7 +166,6 @@
   @media (prefers-reduced-motion: reduce) {
     .promo-banner { text-align: center; }
     .promo-track { display: block; padding-left: 0; }
-    .promo-track .promo-item:nth-child(2) { display: none; }
   }
 
   header.top {
@@ -256,19 +255,19 @@
     grid-template-columns: repeat(2, minmax(260px, 1fr));
     gap: var(--sp-4);
   }
+  /* On a phone, dishes used to sit in a horizontally-scrolling row (swipe
+     sideways within a tier, scroll down between tiers) — a "2D" browsing
+     pattern that's a common source of a site feeling fiddly to navigate on
+     mobile, since it's easy to miss that a row scrolls sideways at all. A
+     single vertical column keeps every dish reachable with the one gesture
+     phones are built around: scroll down. Cards are also tightened up below
+     (less padding, a shorter description, bigger +/- buttons) so this
+     doesn't just trade sideways scrolling for a lot more of it vertically. */
   @media (max-width: 640px) {
     .dish-row {
-      grid-template-columns: none;
-      grid-auto-flow: column;
-      grid-auto-columns: 84%;
-      overflow-x: auto;
-      scroll-snap-type: x mandatory;
-      padding-bottom: 4px;
-      margin: 0 -20px;
-      padding-left: 20px;
-      padding-right: 20px;
+      grid-template-columns: 1fr;
+      gap: var(--sp-3);
     }
-    .dish-row .card { scroll-snap-align: start; }
   }
 
   .card {
@@ -314,6 +313,26 @@
   @media (prefers-reduced-motion: no-preference) {
     @keyframes qtyBump { 0% { transform: scale(1); } 45% { transform: scale(1.32); } 100% { transform: scale(1); } }
     .stepper .qty.bump { animation: qtyBump .3s var(--ease-out); }
+  }
+
+  /* Tighter cards for a phone screen — less padding/gap so each dish takes
+     noticeably less vertical space, a shorter (clamped) description so the
+     card reads as a scannable summary rather than the full recipe blurb,
+     and bigger +/- buttons, since 28px was under the ~40px a thumb reliably
+     hits without zooming in first. */
+  @media (max-width: 640px) {
+    .card { padding: 13px 14px 12px; gap: 6px; }
+    .card h3 { font-size: 16.5px; }
+    .card .blurb {
+      font-size: 13.5px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .stepper { padding: 2px; gap: 4px; }
+    .stepper button { width: 38px; height: 38px; font-size: 17px; }
+    .stepper .qty { min-width: 22px; }
   }
 
   .window-toggle, .addon-toggle-row {
@@ -638,9 +657,8 @@
 </style>
 
 <div class="promo-banner" role="note" aria-label="Promotion">
-  <div class="promo-track">
+  <div class="promo-track" id="promoTrack">
     <span class="promo-item">Use discount code <b>FIRST10</b> to get 10% off your first order!</span>
-    <span class="promo-item" aria-hidden="true">Use discount code <b>FIRST10</b> to get 10% off your first order!</span>
   </div>
 </div>
 
@@ -2713,10 +2731,66 @@
     if (!banner) return;
     document.documentElement.style.setProperty("--promo-h", banner.offsetHeight + "px");
   }
+
+  // The marquee loops by sliding its track exactly -50% (see @keyframes
+  // promoSlide) — seamless IF the first half of the track is already at
+  // least as wide as the screen, so the second (identical) half is what
+  // slides into view right as the first runs out. A single hardcoded copy
+  // of the message is nowhere near wide enough on a desktop monitor, so the
+  // track ran out of content partway across and the rest of the banner sat
+  // blank until it looped. Fixed by repeating the message enough times, in
+  // JS, to actually cover the real screen width — measured from the message
+  // itself rather than a guessed pixel figure, so this keeps working even
+  // if the promo text is changed later.
+  function buildPromoTrack() {
+    var track = document.getElementById("promoTrack");
+    if (!track) return;
+    var template = track.querySelector(".promo-item");
+    if (!template) return;
+    var text = template.innerHTML;
+
+    var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduceMotion) {
+      // No animation running — one centered copy, same as before.
+      track.innerHTML = '<span class="promo-item">' + text + "</span>";
+      return;
+    }
+
+    var probe = template.cloneNode(true);
+    probe.removeAttribute("aria-hidden");
+    probe.style.position = "absolute";
+    probe.style.visibility = "hidden";
+    track.appendChild(probe);
+    var itemWidth = probe.getBoundingClientRect().width;
+    track.removeChild(probe);
+    if (!itemWidth) return;
+
+    var GAP = 56; // matches .promo-track's flex `gap` / `padding-left`
+    var viewport = window.innerWidth || document.documentElement.clientWidth || 1200;
+    // One full repeated "set" needs to span at least the viewport, or the
+    // loop point falls in blank space — +1 repeat of margin so a close call
+    // never falls just short.
+    var count = Math.max(2, Math.ceil(viewport / (itemWidth + GAP)) + 1);
+
+    var html = "";
+    for (var s = 0; s < 2; s++) {
+      for (var i = 0; i < count; i++) {
+        html += '<span class="promo-item"' + (s === 0 && i === 0 ? "" : ' aria-hidden="true"') + ">" + text + "</span>";
+      }
+    }
+    track.innerHTML = html;
+  }
+
   updatePromoOffset();
-  window.addEventListener("resize", updatePromoOffset, { passive: true });
+  buildPromoTrack();
+  var promoResizeTimer = null;
+  window.addEventListener("resize", function () {
+    updatePromoOffset();
+    clearTimeout(promoResizeTimer);
+    promoResizeTimer = setTimeout(buildPromoTrack, 200);
+  }, { passive: true });
   if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(updatePromoOffset);
+    document.fonts.ready.then(function () { updatePromoOffset(); buildPromoTrack(); });
   }
 
   // Shown once MENU_LIVE_FROM is set and every window in this rotation has
@@ -2754,6 +2828,7 @@
   }
 })();
 </script>
+
 
 
 </body>
