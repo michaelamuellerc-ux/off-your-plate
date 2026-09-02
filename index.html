@@ -141,6 +141,9 @@
   }
 
   .promo-banner {
+    position: sticky;
+    top: 0;
+    z-index: 21;
     background: linear-gradient(90deg, var(--accent-strong), var(--accent));
     color: var(--accent-ink);
     overflow: hidden;
@@ -167,7 +170,7 @@
 
   header.top {
     position: sticky;
-    top: 0;
+    top: var(--promo-h, 33px);
     z-index: 20;
     background: var(--bg);
     border-bottom: 1px solid var(--line);
@@ -361,11 +364,11 @@
     border: 1px solid var(--line);
     border-radius: var(--r-xl);
     box-shadow: var(--shadow);
-    padding: 15px 16px 14px;
+    padding: 13px 16px 12px;
   }
-  .order-panel h2 { margin: 0 0 3px; font-size: 17px; }
-  .order-panel .sub { color: var(--ink-soft); font-size: 12px; margin: 0 0 var(--sp-3); }
-  .order-items { display: flex; flex-direction: column; gap: var(--sp-2); margin-bottom: var(--sp-3); max-height: 220px; overflow-y: auto; }
+  .order-panel h2 { margin: 0 0 2px; font-size: 17px; }
+  .order-panel .sub { color: var(--ink-soft); font-size: 12px; margin: 0 0 8px; }
+  .order-items { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; max-height: 180px; overflow-y: auto; }
   .order-empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; color: var(--ink-faint); font-size: 13px; padding: 14px 4px 10px; }
   .order-empty svg { width: 34px; height: 34px; color: var(--ink-faint); opacity: .7; }
   .order-empty p { margin: 0; line-height: 1.5; max-width: 24ch; }
@@ -381,7 +384,7 @@
   .order-delivery { display: flex; justify-content: space-between; align-items: baseline; padding: 0 10px; margin: -2px 0 6px; font-size: 12px; color: var(--ink-soft); }
   .order-delivery[hidden] { display: none; }
   .order-delivery .amt { font-family: 'IBM Plex Mono', monospace; }
-  .order-total { display: flex; justify-content: space-between; align-items: baseline; background: var(--accent-soft); border-radius: var(--r-md); padding: 8px 10px; margin-bottom: var(--sp-3); }
+  .order-total { display: flex; justify-content: space-between; align-items: baseline; background: var(--accent-soft); border-radius: var(--r-md); padding: 7px 10px; margin-bottom: 8px; }
   .order-total .label { font-size: 13px; color: var(--ink-soft); }
   .order-total .amt { font-family: 'IBM Plex Mono', monospace; font-size: 18px; font-weight: 600; color: var(--accent); }
 
@@ -391,10 +394,10 @@
   .menu-closed p { margin: 0; max-width: 42ch; line-height: 1.6; }
   .layout.closed { display: block; }
 
-  label.field { display: block; font-size: 12px; font-weight: 600; color: var(--ink-soft); margin-bottom: 4px; }
+  label.field { display: block; font-size: 12px; font-weight: 600; color: var(--ink-soft); margin-bottom: 3px; }
   input.field, textarea.field, select.field {
-    width: 100%; border: 1px solid var(--line); border-radius: var(--r-md); padding: 8px 10px;
-    background: var(--surface-sunken); color: var(--ink); font: inherit; font-size: 13.5px; margin-bottom: 8px; resize: vertical;
+    width: 100%; border: 1px solid var(--line); border-radius: var(--r-md); padding: 7px 10px;
+    background: var(--surface-sunken); color: var(--ink); font: inherit; font-size: 13.5px; margin-bottom: 6px; resize: vertical;
     transition: border-color var(--dur-fast) var(--ease-out);
   }
   input.field:focus, textarea.field:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
@@ -417,10 +420,10 @@
   .delivery-method-toggle .sz-label { font-size: 11.5px; font-weight: 700; }
   .delivery-method-toggle .sz-price { font-size: 11px; opacity: .85; font-family: 'IBM Plex Mono', monospace; }
   .delivery-method-toggle button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-  .perk-fields { margin-bottom: 8px; }
+  .perk-fields { margin-bottom: 6px; }
   .perk-fields summary {
     cursor: pointer; list-style: none; font-size: 12px; font-weight: 600; color: var(--ink-soft);
-    padding: 7px 10px; border: 1px dashed var(--line); border-radius: var(--r-md);
+    padding: 6px 10px; border: 1px dashed var(--line); border-radius: var(--r-md);
     display: flex; align-items: center; justify-content: space-between; gap: 8px;
   }
   .perk-fields summary::-webkit-details-marker { display: none; }
@@ -428,14 +431,14 @@
   .perk-fields .chevron { font-size: 11px; color: var(--ink-faint); transition: transform var(--dur-fast) var(--ease-out); }
   .perk-fields[open] summary { border-radius: var(--r-md) var(--r-md) 0 0; border-bottom: none; }
   .perk-fields[open] .chevron { transform: rotate(180deg); }
-  .perk-fields-body { border: 1px dashed var(--line); border-top: none; border-radius: 0 0 var(--r-md) var(--r-md); padding: 10px 10px 2px; }
+  .perk-fields-body { border: 1px dashed var(--line); border-top: none; border-radius: 0 0 var(--r-md) var(--r-md); padding: 8px 10px 2px; }
   .min-order-note { display: none; font-size: 11px; color: var(--gold); margin: -4px 0 8px; line-height: 1.45; }
   .min-order-note.is-visible { display: block; }
 
-  .send-row { display: flex; flex-direction: column; gap: var(--sp-2); }
+  .send-row { display: flex; flex-direction: column; gap: 6px; }
   .btn {
     display: flex; align-items: center; justify-content: center; gap: 8px;
-    border-radius: var(--r-md); padding: 11px 14px; font-size: 14px; font-weight: 700;
+    border-radius: var(--r-md); padding: 10px 14px; font-size: 14px; font-weight: 700;
     border: 1px solid transparent; cursor: pointer; text-decoration: none;
     transition: transform var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
   }
@@ -449,7 +452,7 @@
     .btn.sent { animation: sentPop .4s var(--ease-out); }
   }
   .btn:disabled { opacity: .45; cursor: not-allowed; }
-  .hint { font-size: 11px; color: var(--ink-faint); margin-top: 6px; line-height: 1.45; }
+  .hint { font-size: 11px; color: var(--ink-faint); margin-top: 4px; line-height: 1.4; }
   .hint-link { color: var(--accent-strong); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
 
   .delivery-zone {
@@ -474,13 +477,42 @@
   .reminder-optin { display: flex; align-items: center; gap: 10px; padding: 11px 16px; background: var(--accent-soft); border-radius: var(--r-md); }
   .reminder-optin svg { width: 18px; height: 18px; color: var(--accent-strong); flex: none; }
   .reminder-optin p { margin: 0; font-size: 13px; color: var(--ink); line-height: 1.5; }
-  .reminder-link { color: var(--accent-strong); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+  .reminder-link {
+    background: none; border: none; padding: 0; font: inherit; cursor: pointer;
+    color: var(--accent-strong); font-weight: 700; text-decoration: underline; text-underline-offset: 2px;
+  }
+
+  /* "Get a WhatsApp nudge" popup — a real dialog rather than window.prompt(),
+     since a published artifact runs in a sandboxed iframe that swallows
+     native browser dialogs entirely. */
+  .reminder-modal-backdrop {
+    position: fixed; inset: 0; background: rgba(15,17,12,0.45); z-index: 60;
+    opacity: 0; pointer-events: none; transition: opacity var(--dur-base) var(--ease-out);
+  }
+  .reminder-modal-backdrop.is-open { opacity: 1; pointer-events: auto; }
+  .reminder-modal {
+    position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(.97);
+    width: min(360px, calc(100vw - 40px));
+    background: var(--surface); border-radius: var(--r-xl); box-shadow: var(--shadow-lg);
+    padding: var(--sp-5); z-index: 61; opacity: 0; pointer-events: none;
+    transition: opacity var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);
+  }
+  .reminder-modal.is-open { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+  .reminder-modal h3 { margin: 0 0 6px; font-size: 17px; }
+  .reminder-modal p { margin: 0 0 var(--sp-3); color: var(--ink-soft); font-size: 13px; line-height: 1.5; }
+  .reminder-modal-close {
+    position: absolute; top: 12px; right: 12px; width: 28px; height: 28px; border-radius: 50%;
+    border: none; background: var(--surface-sunken); color: var(--ink-soft); font-size: 16px; line-height: 1;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+  .reminder-modal .btn.primary.is-disabled { opacity: .45; cursor: not-allowed; }
+  @media (hover: hover) { .reminder-modal-close:hover { color: var(--ink); } }
 
   /* desktop two column */
   .layout { display: block; }
   @media (min-width: 900px) {
     .layout { display: grid; grid-template-columns: 1fr 320px; gap: var(--sp-8); align-items: start; }
-    .order-panel { position: sticky; top: 96px; }
+    .order-panel { position: sticky; top: calc(96px + var(--promo-h, 33px)); }
     .peek-bar { display: none !important; }
   }
 
@@ -588,9 +620,19 @@
     <div class="cutoffs" id="cutoffs"></div>
     <div class="reminder-optin">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 4 1.5 5.5 2 6H4c.5-.5 2-2 2-6Z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg>
-      <p>Ordering later in the week? <a href="#" id="reminderLink" class="reminder-link" target="_top">Get a WhatsApp nudge</a> an hour before each cutoff, so you never miss a window.</p>
+      <p>Ordering later in the week? <button type="button" id="reminderLink" class="reminder-link">Get a WhatsApp nudge</button> an hour before each cutoff, so you never miss a window.</p>
     </div>
   </div>
+</div>
+
+<div class="reminder-modal-backdrop" id="reminderModalBackdrop"></div>
+<div class="reminder-modal" id="reminderModal" role="dialog" aria-modal="true" aria-labelledby="reminderModalTitle">
+  <button type="button" class="reminder-modal-close" id="reminderModalClose" aria-label="Close">✕</button>
+  <h3 id="reminderModalTitle" class="display">Get a WhatsApp nudge</h3>
+  <p>We'll message you an hour before each ordering cutoff, so you never miss a window.</p>
+  <label class="field" for="reminderModalPhone">Your WhatsApp number</label>
+  <input class="field" id="reminderModalPhone" type="text" placeholder="e.g. 07700 900123" />
+  <a href="#" id="reminderModalSend" class="btn primary is-disabled" target="_top">Open WhatsApp</a>
 </div>
 
 <div class="app">
@@ -879,15 +921,58 @@
 
   var OWNER_WHATSAPP = "447884299705"; // +44 7884 299705, formatted for wa.me (no +, no leading 0)
 
-  // "Get a WhatsApp nudge" opt-in (static link, set once — this isn't tied
-  // to an order). There's no backend here: it just opens WhatsApp with a
-  // ready-made opt-in message to Michaela, who keeps her own list and sends
-  // the actual reminder texts herself an hour before each cutoff.
+  // "Get a WhatsApp nudge" opt-in — there's no backend here: clicking
+  // through opens a small popup asking for a phone number, then opens
+  // WhatsApp with a ready-made message to Michaela (who keeps her own list
+  // and sends the actual reminder texts herself an hour before each
+  // cutoff). The number matters: WhatsApp's own "copy message" strips the
+  // sender entirely, so without a "Phone: ..." line baked into the message
+  // itself there'd be no reliable way to get it into that list. This is a
+  // real in-page dialog rather than window.prompt() — a published artifact
+  // runs in a sandboxed iframe that swallows native browser dialogs.
   (function () {
-    var link = document.getElementById("reminderLink");
-    if (!link) return;
-    var msg = "Hi! Please add me to your cutoff reminder list — I'd like a WhatsApp nudge an hour before each ordering cutoff 🔔";
-    link.href = "https://wa.me/" + OWNER_WHATSAPP + "?text=" + encodeURIComponent(msg);
+    var openBtn = document.getElementById("reminderLink");
+    var backdrop = document.getElementById("reminderModalBackdrop");
+    var modal = document.getElementById("reminderModal");
+    var closeBtn = document.getElementById("reminderModalClose");
+    var phoneInput = document.getElementById("reminderModalPhone");
+    var sendLink = document.getElementById("reminderModalSend");
+    if (!openBtn || !modal) return;
+
+    function updateSendLink() {
+      var phone = phoneInput.value.trim();
+      var msg = "Hi! Please add me to your cutoff reminder list — I'd like a WhatsApp nudge an hour before each ordering cutoff 🔔";
+      if (phone) msg += "\n\nPhone: " + phone;
+      sendLink.href = "https://wa.me/" + OWNER_WHATSAPP + "?text=" + encodeURIComponent(msg);
+      var ready = phone.length > 0;
+      sendLink.classList.toggle("is-disabled", !ready);
+      sendLink.style.pointerEvents = ready ? "" : "none";
+      sendLink.setAttribute("aria-disabled", ready ? "false" : "true");
+    }
+
+    function openModal() {
+      backdrop.classList.add("is-open");
+      modal.classList.add("is-open");
+      updateSendLink();
+      phoneInput.focus();
+    }
+    function closeModal() {
+      backdrop.classList.remove("is-open");
+      modal.classList.remove("is-open");
+      phoneInput.value = "";
+    }
+
+    openBtn.addEventListener("click", openModal);
+    closeBtn.addEventListener("click", closeModal);
+    backdrop.addEventListener("click", closeModal);
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && modal.classList.contains("is-open")) closeModal();
+    });
+    phoneInput.addEventListener("input", updateSendLink);
+    sendLink.addEventListener("click", function () {
+      setTimeout(closeModal, 50);
+    });
+    updateSendLink();
   })();
 
   // Postcode districts (outward-code level, e.g. "N1" not "N1 2AB") currently
@@ -1923,6 +2008,21 @@
   window.addEventListener("scroll", function () {
     document.querySelector("header.top").classList.toggle("scrolled", window.scrollY > 4);
   }, { passive: true });
+
+  // ---------------- keep the sticky header/order-panel offset in sync
+  // with the promo banner's real (rendered) height, so the banner can
+  // stay pinned above the header without the header or the desktop
+  // order panel overlapping it ----------------
+  function updatePromoOffset() {
+    var banner = document.querySelector(".promo-banner");
+    if (!banner) return;
+    document.documentElement.style.setProperty("--promo-h", banner.offsetHeight + "px");
+  }
+  updatePromoOffset();
+  window.addEventListener("resize", updatePromoOffset, { passive: true });
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(updatePromoOffset);
+  }
 
   // Shown once MENU_LIVE_FROM is set and every window in this rotation has
   // fallen away (its cutoff has passed) — rather than the page quietly
