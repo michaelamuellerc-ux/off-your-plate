@@ -328,7 +328,7 @@
   }
   .addon-toggle-row { display: flex; gap: 6px; }
   .window-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-  .window-toggle.is-visible { max-height: 130px; opacity: 1; margin-top: 2px; }
+  .window-toggle.is-visible { max-height: 160px; opacity: 1; margin-top: 2px; }
   .size-toggle { display: flex; gap: 6px; margin: 2px 0 0; }
   .size-toggle button {
     flex: 1; border: 1px solid var(--line); background: var(--surface-sunken); color: var(--ink-soft);
@@ -341,6 +341,7 @@
   .size-toggle button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
   .addon-toggle-row.is-visible { max-height: 50px; opacity: 1; margin-top: 2px; flex-wrap: wrap; }
   .window-toggle button {
+    position: relative;
     flex: 1; border: 1px solid var(--line); background: var(--surface-sunken); color: var(--ink-soft);
     border-radius: var(--r-sm); padding: 5px 4px 6px; cursor: pointer;
     display: flex; flex-direction: column; align-items: center; gap: 1px; line-height: 1.2;
@@ -349,6 +350,19 @@
   .window-toggle .wt-days { font-size: 11.5px; font-weight: 700; }
   .window-toggle .wt-dates { font-size: 9.5px; opacity: .8; font-family: 'IBM Plex Mono', monospace; }
   .window-toggle button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  /* Badge showing how many of this dish/config are already in the cart for
+     THIS slot specifically — a dish can now carry a different quantity in
+     more than one delivery slot at once, so this is what makes the split
+     visible at a glance (see dishQtyKey / configQtyTotal in the script). */
+  .wt-qty {
+    position: absolute; top: -7px; right: -6px;
+    background: var(--accent); color: var(--accent-ink);
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 700;
+    border-radius: var(--r-pill); padding: 1px 5px; line-height: 1.4;
+    box-shadow: var(--shadow-sm);
+  }
+  .window-toggle button[aria-pressed="true"] .wt-qty { background: var(--accent-ink); color: var(--accent); }
+  .window-toggle-caption { grid-column: 1 / -1; font-size: 10.5px; color: var(--ink-faint); margin: -1px 0 1px; }
 
   .addon-check {
     display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
@@ -616,8 +630,7 @@
     .dish-row .card:nth-child(2) { animation-delay: calc(var(--i, 0) * 70ms + 160ms); }
   }
 </style>
-</head>
-<body>
+
 <div class="promo-banner" role="note" aria-label="Promotion">
   <div class="promo-track">
     <span class="promo-item">Use discount code <b>FIRST10</b> to get 10% off your first order!</span>
@@ -719,17 +732,17 @@
         <div class="payment-note">Payment: cash on delivery</div>
         <div class="name-row">
           <div class="name-field">
-            <label class="field" for="famFirstName">First name</label>
+            <label class="field" for="famFirstName">First name *</label>
             <input class="field" id="famFirstName" type="text" placeholder="e.g. Maria" />
           </div>
           <div class="name-field">
-            <label class="field" for="famSurname">Surname</label>
+            <label class="field" for="famSurname">Surname *</label>
             <input class="field" id="famSurname" type="text" placeholder="e.g. Alverez" />
           </div>
         </div>
-        <label class="field" for="famPhone">Phone number</label>
+        <label class="field" for="famPhone">Phone number *</label>
         <input class="field" id="famPhone" type="tel" placeholder="e.g. 07123 456789" autocomplete="tel" />
-        <label class="field" for="famPostcode">Postcode</label>
+        <label class="field" for="famPostcode">Postcode *</label>
         <input class="field" id="famPostcode" type="text" placeholder="e.g. N1 2AB" autocapitalize="characters" />
         <p class="postcode-note" id="postcodeNote"></p>
         <div class="delivery-method-toggle" id="deliveryMethodToggle">
@@ -754,9 +767,11 @@
         </details>
         <label class="field" for="famNotes">Notes (allergies, swaps, anything else)</label>
         <textarea class="field" id="famNotes" rows="2" placeholder="Optional"></textarea>
+        <p class="discount-error-note" id="requiredFieldsNote"></p>
         <div class="send-row">
           <a class="btn primary" id="sendWhatsapp" href="#" target="_top">Send via WhatsApp</a>
         </div>
+        <p class="hint">* Required</p>
         <p class="hint">Sending opens WhatsApp with your order already typed out, ready to fire off to Michaela — no account needed.</p>
         <p class="hint">Having issues? <a class="hint-link" href="mailto:michaela.mueller.c@gmail.com">Email me!</a></p>
       </aside>
@@ -1361,21 +1376,27 @@
     var minus = document.createElement("button"); minus.type = "button"; minus.setAttribute("aria-label", "Remove one"); minus.textContent = "–";
     var qtyEl = document.createElement("span"); qtyEl.className = "qty mono";
     var plus = document.createElement("button"); plus.type = "button"; plus.setAttribute("aria-label", "Add one"); plus.textContent = "+";
-    // +/- act on whichever variant/batch/size is currently selected on this
-    // card (see dishLineKey) — that line's own count, not a single count for
-    // the whole dish, so a different choice starts (or resumes) its own line.
-    function refresh() { qtyEl.textContent = state.qty[dishLineKey(dishId, dish)] || 0; }
+    // +/- act on whichever variant/batch/size AND delivery slot are
+    // currently selected on this card (see dishLineKey and the window
+    // toggle below) — that line's own count, not a single count for the
+    // whole dish, so a different choice — or a different slot — starts (or
+    // resumes) its own line, letting the same dish carry its own quantity
+    // in more than one slot at once.
+    function currentWindowId() {
+      var configKey = dishLineKey(dishId, dish);
+      return state.window[configKey] || WINDOWS.list[0].id;
+    }
+    function refresh() { qtyEl.textContent = state.qty[dishQtyKey(dishId, dish, currentWindowId())] || 0; }
     minus.addEventListener("click", function () {
-      var key = dishLineKey(dishId, dish);
+      var key = dishQtyKey(dishId, dish, currentWindowId());
       var q = (state.qty[key] || 0) - 1;
       state.qty[key] = Math.max(0, q);
       justSent = false;
       refresh(); bump(qtyEl); onOrderChange();
     });
     plus.addEventListener("click", function () {
-      var key = dishLineKey(dishId, dish);
+      var key = dishQtyKey(dishId, dish, currentWindowId());
       state.qty[key] = (state.qty[key] || 0) + 1;
-      if (!state.window[key]) state.window[key] = WINDOWS.list[0].id;
       justSent = false;
       refresh(); bump(qtyEl); onOrderChange();
     });
@@ -1384,16 +1405,29 @@
     return wrap;
   }
 
+  // Picking a slot here doesn't replace what's already in the cart for this
+  // dish — it just moves the stepper's focus to that slot's own count (see
+  // dishQtyKey/currentWindowId above), so tapping +/- after switching adds
+  // to THAT slot rather than overwriting a different one. The little badge
+  // on each button (see onOrderChange) is what shows a slot already has
+  // something in it.
   function windowToggle(dishId, dish) {
     var wrap = document.createElement("div");
-    var key = dishLineKey(dishId, dish);
-    wrap.className = "window-toggle" + ((state.qty[key] || 0) > 0 ? " is-visible" : "");
+    var configKey = dishLineKey(dishId, dish);
+    wrap.className = "window-toggle" + (configQtyTotal(configKey) > 0 ? " is-visible" : "");
     wrap.dataset.for = dishId;
+    var caption = document.createElement("span");
+    caption.className = "window-toggle-caption";
+    caption.textContent = "Want this in more than one slot? Tap another.";
+    wrap.appendChild(caption);
     WINDOWS.list.forEach(function (info) {
       var b = document.createElement("button");
       b.type = "button";
-      b.innerHTML = '<span class="wt-days">' + info.dayLabel + '</span><span class="wt-dates">' + formatRangeShort(info.start, info.end) + '</span>';
-      b.setAttribute("aria-pressed", state.window[key] === info.id ? "true" : "false");
+      b.dataset.window = info.id;
+      var q = state.qty[qtyKeyFromConfig(configKey, info.id)] || 0;
+      b.innerHTML = '<span class="wt-days">' + info.dayLabel + '</span><span class="wt-dates">' + formatRangeShort(info.start, info.end) + '</span>' +
+        (q > 0 ? '<span class="wt-qty">' + q + '×</span>' : '');
+      b.setAttribute("aria-pressed", (state.window[configKey] || WINDOWS.list[0].id) === info.id ? "true" : "false");
       b.addEventListener("click", function () {
         state.window[dishLineKey(dishId, dish)] = info.id;
         wrap.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
@@ -1407,7 +1441,7 @@
 
   function addonToggle(dishId, dish) {
     var wrap = document.createElement("div");
-    wrap.className = "addon-toggle-row" + ((state.qty[dishId] || 0) > 0 ? " is-visible" : "");
+    wrap.className = "addon-toggle-row" + (configQtyTotal(dishLineKey(dishId, dish)) > 0 ? " is-visible" : "");
     wrap.dataset.for = dishId;
     dish.addOns.forEach(function (a) {
       var label = document.createElement("label");
@@ -1484,8 +1518,24 @@
       if (kv[0] === "v") meta.variantId = kv[1];
       if (kv[0] === "b") meta.batchId = kv[1];
       if (kv[0] === "s") meta.sizeId = kv[1];
+      if (kv[0] === "w") meta.windowId = kv[1];
     }
     return meta;
+  }
+  // A dish (in a given variant/size config — see dishLineKey) can now sit in
+  // the cart with a DIFFERENT quantity in more than one delivery slot at
+  // once — order 2 for this week and 1 for next week's, say. state.qty is
+  // keyed by config *and* slot together (qtyKeyFromConfig), so each slot
+  // gets its own independent running count; state.window[configKey] is
+  // purely a UI cursor — which slot's count the stepper is currently
+  // showing/editing and which window button is highlighted — not a record
+  // of where the order actually goes (that's what the qty keys carry).
+  function qtyKeyFromConfig(configKey, windowId) { return configKey + "::w=" + windowId; }
+  function dishQtyKey(dishId, dish, windowId) { return qtyKeyFromConfig(dishLineKey(dishId, dish), windowId); }
+  function configQtyTotal(configKey) {
+    var sum = 0;
+    WINDOWS.list.forEach(function (w) { sum += state.qty[qtyKeyFromConfig(configKey, w.id)] || 0; });
+    return sum;
   }
   // Config-based equivalents of dishBasePrice/dishSizeLabel (below), used for
   // lines already sitting in the cart: a line's price and label stay pinned
@@ -1712,7 +1762,7 @@
           price: priceForConfig(entry.dish, entry.tier.price, meta.variantId, meta.batchId, meta.sizeId) + extra,
           addOns: addOns,
           sizeLabel: labelForConfig(entry.dish, meta.variantId, meta.batchId, meta.sizeId),
-          qty: q, window: state.window[key] || WINDOWS.list[0].id
+          qty: q, window: meta.windowId || WINDOWS.list[0].id
         });
       }
     });
@@ -1817,29 +1867,42 @@
       var id = w.dataset.for;
       var entry = DISH_MAP[id];
       if (!entry) return;
-      var key = dishLineKey(id, entry.dish);
-      var visible = (state.qty[key] || 0) > 0;
-      w.classList.toggle("is-visible", visible);
-      if (visible) {
-        var val = state.window[key] || WINDOWS.list[0].id;
-        w.querySelectorAll("button").forEach(function (btn, i) {
-          btn.setAttribute("aria-pressed", WINDOWS.list[i].id === val ? "true" : "false");
-        });
-      }
+      var configKey = dishLineKey(id, entry.dish);
+      w.classList.toggle("is-visible", configQtyTotal(configKey) > 0);
+      var selected = state.window[configKey] || WINDOWS.list[0].id;
+      w.querySelectorAll("button").forEach(function (btn) {
+        var windowId = btn.dataset.window;
+        btn.setAttribute("aria-pressed", windowId === selected ? "true" : "false");
+        // Keep each slot's own little count badge in sync too — not just
+        // the one the stepper currently has focused (see dishQtyKey).
+        var q = state.qty[qtyKeyFromConfig(configKey, windowId)] || 0;
+        var badge = btn.querySelector(".wt-qty");
+        if (q > 0) {
+          if (!badge) { badge = document.createElement("span"); badge.className = "wt-qty"; btn.appendChild(badge); }
+          badge.textContent = q + "×";
+        } else if (badge) {
+          badge.remove();
+        }
+      });
     });
-    // A variant/batch/size button click changes which line this card's
-    // stepper is now pointing at (see dishLineKey), so its displayed count
-    // needs refreshing here too — not just from the stepper's own +/- clicks.
+    // A variant/batch/size or slot button click changes which line this
+    // card's stepper is now pointing at (see dishLineKey/currentWindowId),
+    // so its displayed count needs refreshing here too — not just from the
+    // stepper's own +/- clicks.
     document.querySelectorAll(".stepper").forEach(function (wrap) {
       var id = wrap.dataset.for;
       var entry = DISH_MAP[id];
       if (!entry) return;
+      var configKey = dishLineKey(id, entry.dish);
+      var selected = state.window[configKey] || WINDOWS.list[0].id;
       var qtyEl = wrap.querySelector(".qty");
-      if (qtyEl) qtyEl.textContent = state.qty[dishLineKey(id, entry.dish)] || 0;
+      if (qtyEl) qtyEl.textContent = state.qty[qtyKeyFromConfig(configKey, selected)] || 0;
     });
     document.querySelectorAll(".addon-toggle-row").forEach(function (w) {
       var id = w.dataset.for;
-      w.classList.toggle("is-visible", (state.qty[id] || 0) > 0);
+      var entry = DISH_MAP[id];
+      if (!entry) return;
+      w.classList.toggle("is-visible", configQtyTotal(dishLineKey(id, entry.dish)) > 0);
     });
     document.querySelectorAll(".price-tag").forEach(function (p) {
       var id = p.dataset.for;
@@ -1917,8 +1980,8 @@
   }
 
   var CODE_CHECK_MESSAGES = {
-    "first10-reused": "This code has already been used on this number — it won't be applied. You're welcome to order at full price!",
-    "referral-reused": "You've already used a referral code before — this one won't be applied. You're welcome to order at full price!",
+    "first10-reused": "It looks like this code has already been redeemed on your account — invalid entry.",
+    "referral-reused": "It looks like this code has already been redeemed on your account — invalid entry.",
     "self-referral": "That's your own referral code — it can't be used on your own order."
   };
 
@@ -1941,29 +2004,40 @@
     return null;
   }
 
-  // The single place that decides which of the three notes (if any) is
-  // showing — so exactly one can ever be visible at a time.
-  function renderCodeChecks() {
-    var checkingEl = document.getElementById("discountCheckingNote");
-    var errorEl = document.getElementById("discountErrorNote");
-    var warningEl = document.getElementById("discountWarningNote");
-
-    // A stale backendResult from a since-edited phone/code pair must never
-    // render — the debounce timer that would null it out hasn't fired yet
-    // (it waits CODE_CHECK_DEBOUNCE_MS), so gate on the CURRENT fields
-    // still being non-empty rather than waiting for that timer.
+  // The one place that decides whether the current discount/referral code
+  // is a hard blocker — shared by renderCodeChecks (what to show) and
+  // updateSendLinks (whether Send is allowed to fire at all: this error
+  // must clear before an order can be submitted). A stale backendResult
+  // from a since-edited phone/code pair must never count — the debounce
+  // timer that would null it out hasn't fired yet (it waits
+  // CODE_CHECK_DEBOUNCE_MS), so this gates on the CURRENT fields still
+  // being non-empty rather than waiting for that timer.
+  function activeCodeErrorReason() {
     var codeRaw = document.getElementById("famDiscount").value.trim();
     var phoneDigits = ukMobileDigits(document.getElementById("famPhone").value);
     var localIssue = localCodeIssue();
     var backendReason = (codeRaw && phoneDigits && codeCheckState.backendResult && codeCheckState.backendResult.valid === false)
       ? codeCheckState.backendResult.reason : null;
-    var reason = localIssue || backendReason;
+    return localIssue || backendReason;
+  }
+
+  // The single place that decides which of the three notes (if any) is
+  // showing — so exactly one can ever be visible at a time. Also keeps the
+  // Send button's enabled state current, since a hard code error (or a
+  // still-in-flight check) has to block sending, not just warn about it.
+  function renderCodeChecks() {
+    var checkingEl = document.getElementById("discountCheckingNote");
+    var errorEl = document.getElementById("discountErrorNote");
+    var warningEl = document.getElementById("discountWarningNote");
+
+    var reason = activeCodeErrorReason();
 
     if (reason) {
       errorEl.textContent = CODE_CHECK_MESSAGES[reason] || "This code isn't valid for this order.";
       errorEl.classList.add("is-visible");
       checkingEl.classList.remove("is-visible");
       warningEl.classList.remove("is-visible");
+      updateSendLinks(currentItems());
       return;
     }
     errorEl.classList.remove("is-visible");
@@ -1971,6 +2045,7 @@
     if (codeCheckState.checking) {
       checkingEl.classList.add("is-visible");
       warningEl.classList.remove("is-visible");
+      updateSendLinks(currentItems());
       return;
     }
     checkingEl.classList.remove("is-visible");
@@ -1979,6 +2054,7 @@
     // — fall back to the soft, same-device-only heuristic.
     var code = document.getElementById("famDiscount").value;
     warningEl.classList.toggle("is-visible", isFirst10Code(code) && first10UsedOnThisDevice());
+    updateSendLinks(currentItems());
   }
 
   function scheduleBackendCodeCheck() {
@@ -2060,6 +2136,27 @@
     onDiscountRelevantInputChanged();
   }
 
+  // First/last name, phone and postcode are required to send an order —
+  // this is the one place that decides what's still missing, so the same
+  // wording drives both the inline note and (via updateSendLinks) whether
+  // Send is actually clickable.
+  function missingRequiredFieldMessage() {
+    var firstName = document.getElementById("famFirstName").value.trim();
+    var surname = document.getElementById("famSurname").value.trim();
+    var postcode = document.getElementById("famPostcode").value.trim();
+    var phoneRaw = document.getElementById("famPhone").value.trim();
+    var phoneDigits = ukMobileDigits(phoneRaw);
+    var missing = [];
+    if (!firstName) missing.push("first name");
+    if (!surname) missing.push("surname");
+    if (!phoneDigits) missing.push(phoneRaw ? "a valid UK mobile number" : "phone number");
+    if (!postcode) missing.push("postcode");
+    if (!missing.length) return "";
+    var list = missing.length === 1 ? missing[0]
+      : missing.slice(0, -1).join(", ") + " and " + missing[missing.length - 1];
+    return "Please add your " + list + " to send your order.";
+  }
+
   function updateSendLinks(items) {
     var firstName = document.getElementById("famFirstName").value.trim();
     var surname = document.getElementById("famSurname").value.trim();
@@ -2071,7 +2168,22 @@
     var referredBy = document.getElementById("famReferral").value.trim();
     var msg = buildMessage(items, name, notes, postcode, phone, discountCode, referredBy);
     var wa = document.getElementById("sendWhatsapp");
-    var disabled = items.length === 0 || total(items) < MINIMUM_ORDER;
+    var missingMsg = missingRequiredFieldMessage();
+    // A hard discount/referral error (e.g. a code already redeemed on this
+    // number) blocks sending outright until it's cleared — same treatment
+    // as a missing required field, not just a warning.
+    var codeError = activeCodeErrorReason();
+    var requiredNote = document.getElementById("requiredFieldsNote");
+    if (requiredNote) {
+      if (items.length > 0 && missingMsg) {
+        requiredNote.textContent = missingMsg;
+        requiredNote.classList.add("is-visible");
+      } else {
+        requiredNote.textContent = "";
+        requiredNote.classList.remove("is-visible");
+      }
+    }
+    var disabled = items.length === 0 || total(items) < MINIMUM_ORDER || !!missingMsg || !!codeError;
 
     wa.href = "https://wa.me/" + OWNER_WHATSAPP + "?text=" + encodeURIComponent(msg);
     wa.textContent = "Send via WhatsApp";
