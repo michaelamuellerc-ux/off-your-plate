@@ -524,6 +524,15 @@
   .delivery-zone-label.extended::before { background: var(--gold); }
   .delivery-zone-lists p { margin: 0; font-family: 'IBM Plex Mono', monospace; font-size: 14.5px; font-weight: 600; color: var(--ink); }
   .delivery-zone .sub { margin: 0; color: var(--ink-soft); font-size: 13px; line-height: 1.6; max-width: 46ch; }
+  .delivery-zone .collection-points { margin: 2px 0; padding-left: 0; list-style: none; max-width: 46ch; }
+  .delivery-zone .collection-points li {
+    position: relative; padding-left: 15px; font-size: 13px; color: var(--ink); font-weight: 600;
+    line-height: 1.7;
+  }
+  .delivery-zone .collection-points li::before {
+    content: ""; position: absolute; left: 1px; top: 9px; width: 5px; height: 5px;
+    border-radius: 50%; background: var(--accent);
+  }
 
   .reminder-optin { display: flex; align-items: center; gap: 10px; padding: 11px 16px; background: var(--accent-soft); border-radius: var(--r-md); }
   .reminder-optin svg { width: 18px; height: 18px; color: var(--accent-strong); flex: none; }
@@ -747,7 +756,13 @@
           <p>WC1 · NW1 · N4 · E1 · EC2 · NW5 · E5 · E9</p>
         </div>
       </div>
-      <p class="sub">Prefer to collect instead of a doorstep drop-off? It's free at Highbury &amp; Islington, Canonbury, or Dalston Kingsland / Dalston Junction stations — anywhere else can be arranged with Michaela for a £4 fee. Outside our zones entirely? No problem, you're still welcome to order.</p>
+      <p class="sub">Outside all of these zones, or prefer to collect instead? No problem! We offer free collection points at:</p>
+      <ul class="collection-points">
+        <li>Highbury &amp; Islington Station</li>
+        <li>Canonbury Station</li>
+        <li>Dalston Kingsland / Dalston Junction Station</li>
+      </ul>
+      <p class="sub">Alternatively, you can arrange your own collection point with Michaela for a £4 fee. We'll make it work!</p>
     </div>
 
     <nav class="quick-nav" id="quickNav" aria-label="Jump to a menu section"></nav>
