@@ -1020,7 +1020,22 @@
       return built;
     });
   }
-  var TIERS = buildTiers(TIER_SOURCE, new Date());
+  // While true, the DISH LINEUP is frozen at exactly the moment below — the
+  // same anchor + rotating pair shows in every tier no matter how many real
+  // days pass, instead of quietly rotating on to a new pair while the site
+  // is live but not yet getting real traffic. This deliberately only
+  // touches which dishes show — the delivery windows below (cutoffs, dates)
+  // keep moving with real time regardless, via plain new Date() calls, so
+  // customers who do find the site can always see genuinely orderable
+  // upcoming slots rather than ones frozen in the past. Flip to false (or
+  // just delete this block and the buildTiers() call below goes back to
+  // real new Date()) once it's fine for the menu to start rotating for
+  // real — no need to touch DISH_ROTATION_PAUSED_AT, it's only read while
+  // paused. That's the "start the clock" switch for the dish lineup.
+  var DISH_ROTATION_PAUSED = true;
+  var DISH_ROTATION_PAUSED_AT = new Date(2026, 8, 3, 9, 0); // Thu 3 Sep 2026, 9am — when this was paused
+
+  var TIERS = buildTiers(TIER_SOURCE, DISH_ROTATION_PAUSED ? new Date(DISH_ROTATION_PAUSED_AT) : new Date());
 
   var OWNER_WHATSAPP = "447884299705"; // +44 7884 299705, formatted for wa.me (no +, no leading 0)
   var SITE_URL = "https://off-your-plate-beta.vercel.app/"; // included in the referral message when present, omitted gracefully when not
@@ -1264,9 +1279,10 @@
   // ordering is pinned to that one three-week rotation: as each window's
   // cutoff passes it simply drops off the list rather than being replaced
   // by a new one, and once all six are gone the page shows a "closed"
-  // state — so this menu can never quietly keep taking orders into a week
-  // it was never meant to cover. Set it back to null (and update TIERS)
-  // when the next rotation's menu is ready to go live.
+  // state — so this menu can
+  // never quietly keep taking orders into a week it was never meant to
+  // cover. Set it back to null (and update TIERS) when the next rotation's
+  // menu is ready to go live.
   var MENU_LIVE_FROM = null;
 
   // Small, hand-drawn line icons per tier — inline so nothing external is
