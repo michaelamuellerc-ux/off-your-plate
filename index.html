@@ -743,11 +743,11 @@
           <p>N1 · N5 · N7 · EC1 · N16 · E2 · E8</p>
         </div>
         <div>
-          <span class="delivery-zone-label extended">Extended zone · £3.50 delivery</span>
+          <span class="delivery-zone-label extended">Extended zone · £4.00 delivery</span>
           <p>WC1 · NW1 · N4 · E1 · EC2 · NW5 · E5 · E9</p>
         </div>
       </div>
-      <p class="sub">Somewhere else? No problem — you're still welcome to order, we'll just arrange a collection point instead of a doorstep drop-off.</p>
+      <p class="sub">Prefer to collect instead of a doorstep drop-off? It's free at Highbury &amp; Islington, Canonbury, or Dalston Kingsland / Dalston Junction stations — anywhere else can be arranged with Michaela for a £4 fee. Outside our zones entirely? No problem, you're still welcome to order.</p>
     </div>
 
     <nav class="quick-nav" id="quickNav" aria-label="Jump to a menu section"></nav>
@@ -765,7 +765,7 @@
           <span class="amt mono" id="orderDiscountAmt">-£0.00</span>
         </div>
         <div class="order-delivery" id="orderDelivery" hidden>
-          <span class="label">Delivery (extended zone)</span>
+          <span class="label" id="orderDeliveryLabel">Delivery (extended zone)</span>
           <span class="amt mono" id="orderDeliveryFee">£0.00</span>
         </div>
         <div class="order-total">
@@ -794,8 +794,18 @@
             <span class="sz-label">Delivery</span><span class="sz-price" id="methodDeliveryPrice"></span>
           </button>
           <button type="button" id="methodCollect" aria-pressed="false">
-            <span class="sz-label">I'll collect</span><span class="sz-price">Free</span>
+            <span class="sz-label">I'll collect</span><span class="sz-price">See below</span>
           </button>
+        </div>
+        <div class="collection-point-field" id="collectionPointField" hidden>
+          <label class="field" for="famCollectionPoint">Collection point *</label>
+          <select class="field" id="famCollectionPoint">
+            <option value="">Select a collection point…</option>
+            <option value="Highbury &amp; Islington Station">Highbury &amp; Islington Station — Free</option>
+            <option value="Canonbury Station">Canonbury Station — Free</option>
+            <option value="Dalston Kingsland / Dalston Junction Station">Dalston Kingsland / Dalston Junction Station — Free</option>
+            <option value="other" id="famCollectionPointOther">Somewhere else (arranged with Michaela) — +£4.00</option>
+          </select>
         </div>
         <details class="perk-fields">
           <summary>Have a discount code or referral? <span class="chevron">▾</span></summary>
@@ -1230,7 +1240,18 @@
   // above if either changes.
   var CORE_ZONE = ["N1", "N5", "N7", "EC1", "N16", "E2", "E8"];
   var EXTENDED_ZONE = ["WC1", "NW1", "N4", "E1", "EC2", "NW5", "E5", "E9"];
-  var EXTENDED_DELIVERY_FEE = 3.5;
+  var EXTENDED_DELIVERY_FEE = 4;
+  // Collection is only free at these three stations — anywhere else has to
+  // be arranged case by case with Michaela, and carries a flat fee. Keep
+  // this list in sync with the <select id="famCollectionPoint"> options in
+  // the HTML above, and with the "Where we deliver" banner's caveat text.
+  var FREE_COLLECTION_POINTS = [
+    "Highbury & Islington Station",
+    "Canonbury Station",
+    "Dalston Kingsland / Dalston Junction Station"
+  ];
+  var COLLECTION_OTHER_VALUE = "other"; // the <select>'s sentinel for "somewhere else"
+  var COLLECTION_ARRANGED_FEE = 4;
   // Minimum order, measured against food alone — an extended-zone family
   // shouldn't have to buy extra food just because their delivery fee pushed
   // them over the line. Delivery fee is added afterwards, on top.
@@ -1266,9 +1287,28 @@
     var t = deliveryZoneTier(raw);
     return t === "core" || t === "extended";
   }
+  // Collecting is free only at the three named stations — anywhere else
+  // ("other" in the collection-point select) costs the flat arranged fee.
+  // Meaningless (and never called) unless a customer is actually collecting.
+  function collectionFee() {
+    return collectionPoint === COLLECTION_OTHER_VALUE ? COLLECTION_ARRANGED_FEE : 0;
+  }
   function deliveryFee(raw) {
-    if (wantsCollection) return 0;
-    return deliveryZoneTier(raw) === "extended" ? EXTENDED_DELIVERY_FEE : 0;
+    var tier = deliveryZoneTier(raw);
+    // Fully outside the delivery zone, collection is the only option — no
+    // toggle needed, it's always in effect. In the extended zone it's a
+    // choice: pay the delivery fee, or collect (see the method toggle).
+    if (tier === "out") return collectionFee();
+    if (tier === "extended") return wantsCollection ? collectionFee() : EXTENDED_DELIVERY_FEE;
+    return 0;
+  }
+  // "Delivery (extended zone)" only when it's an actual doorstep delivery
+  // fee; any collection fee (extended-zone collector, or fully out-of-zone)
+  // reads as "Collection fee" instead, so the order panel and WhatsApp
+  // message never mislabel a collection arrangement as a delivery charge.
+  function deliveryFeeLabel(raw) {
+    var tier = deliveryZoneTier(raw);
+    return (tier === "extended" && !wantsCollection) ? "Delivery (extended zone)" : "Collection fee";
   }
 
   // Set this once this specific menu is actually shared with families — the
@@ -1311,6 +1351,13 @@
   // postcode moves out of that zone, so it never silently carries over to
   // a different address.
   var wantsCollection = false;
+  // Which collection point a collecting customer picked — one of
+  // FREE_COLLECTION_POINTS' exact strings, COLLECTION_OTHER_VALUE ("other"),
+  // or "" when nothing's chosen yet. Only meaningful while a collection
+  // point field is actually showing (extended zone + wantsCollection, or
+  // fully outside the zone) — refreshPostcodeNote() resets it the moment
+  // that's no longer true, same reasoning as wantsCollection above.
+  var collectionPoint = "";
 
   function dishByIndex() {
     var map = {};
@@ -1946,6 +1993,7 @@
     var deliveryRow = document.getElementById("orderDelivery");
     if (deliveryRow) {
       deliveryRow.hidden = fee <= 0;
+      document.getElementById("orderDeliveryLabel").textContent = deliveryFeeLabel(postcode);
       document.getElementById("orderDeliveryFee").textContent = fmt(fee);
     }
     var subtotal = total(items);
@@ -2004,7 +2052,7 @@
       lines.push("Discount: -" + fmt(discount.amount) + " (" + discountLabel(discount.kind) + ")");
     }
     if (fee > 0) {
-      lines.push("Delivery (extended zone): " + fmt(fee));
+      lines.push(deliveryFeeLabel(postcode) + ": " + fmt(fee));
     }
     lines.push("Total: " + fmt(subtotal - discount.amount + fee));
     lines.push("Payment: cash on delivery");
@@ -2021,6 +2069,11 @@
           : tier === "extended" ? (wantsCollection ? " (extended zone — collecting instead of delivery)" : " (extended zone — delivery added)")
           : " (outside delivery zone — collection)";
         lines.push("Postcode: " + postcode + zoneNote);
+      }
+      if (collectionPoint) {
+        lines.push("Collection point: " + (collectionPoint === COLLECTION_OTHER_VALUE
+          ? "Somewhere else — to arrange with Michaela"
+          : collectionPoint));
       }
       if (discountCode) lines.push("Discount code: " + discountCode);
       if (referredBy) lines.push("Referred by: " + referredBy);
@@ -2396,10 +2449,21 @@
     onDiscountRelevantInputChanged();
   }
 
-  // First/last name, phone and postcode are required to send an order —
-  // this is the one place that decides what's still missing, so the same
-  // wording drives both the inline note and (via updateSendLinks) whether
-  // Send is actually clickable.
+  // Whenever a collection is actually going to happen (fully outside the
+  // zone, or an extended-zone customer who's chosen to collect), they must
+  // pick where — that's what tells the site (and Michaela) whether it's
+  // free or carries the arranged fee. Mirrors the same condition
+  // refreshPostcodeNote() uses to show/hide the collection-point field.
+  function collectionPointRequired() {
+    var tier = deliveryZoneTier(document.getElementById("famPostcode").value.trim());
+    return tier === "out" || (tier === "extended" && wantsCollection);
+  }
+
+  // First/last name, phone, postcode (and a collection point, when
+  // collecting) are required to send an order — this is the one place that
+  // decides what's still missing, so the same wording drives both the
+  // inline note and (via updateSendLinks) whether Send is actually
+  // clickable.
   function missingRequiredFieldMessage() {
     var firstName = document.getElementById("famFirstName").value.trim();
     var surname = document.getElementById("famSurname").value.trim();
@@ -2411,6 +2475,7 @@
     if (!surname) missing.push("surname");
     if (!phoneDigits) missing.push(phoneRaw ? "a valid UK mobile number" : "phone number");
     if (!postcode) missing.push("postcode");
+    if (postcode && collectionPointRequired() && !collectionPoint) missing.push("collection point");
     if (!missing.length) return "";
     var list = missing.length === 1 ? missing[0]
       : missing.slice(0, -1).join(", ") + " and " + missing[missing.length - 1];
@@ -2550,16 +2615,26 @@
   // Friendly, non-blocking heads-up when a typed postcode falls outside
   // DELIVERY_ZONE — never disables sending, since collection is always a
   // fallback option (see buildMessage(), which also flags this to Michaela).
+  // Resets the collection-point choice and its <select> together — pulled
+  // out since refreshPostcodeNote() needs to do this from three different
+  // branches below, always the same way.
+  function clearCollectionPoint() {
+    collectionPoint = "";
+    document.getElementById("famCollectionPoint").value = "";
+  }
   function refreshPostcodeNote() {
     var raw = document.getElementById("famPostcode").value.trim();
     var note = document.getElementById("postcodeNote");
     var methodToggle = document.getElementById("deliveryMethodToggle");
+    var collectionField = document.getElementById("collectionPointField");
     note.classList.remove("zone-core", "zone-extended", "zone-out");
     if (!raw) {
       note.classList.remove("is-visible");
       note.textContent = "";
       methodToggle.classList.remove("is-visible");
+      collectionField.hidden = true;
       wantsCollection = false;
+      clearCollectionPoint();
       document.getElementById("methodDelivery").setAttribute("aria-pressed", "true");
       document.getElementById("methodCollect").setAttribute("aria-pressed", "false");
       return;
@@ -2570,11 +2645,11 @@
       note.classList.add("zone-core");
     } else if (tier === "extended") {
       note.textContent = wantsCollection
-        ? "Extended zone — you're collecting instead, no delivery fee."
+        ? "Extended zone — collecting instead of delivery. Choose a collection point below."
         : "Extended zone — " + fmt(EXTENDED_DELIVERY_FEE) + " delivery added to your total.";
       note.classList.add("zone-extended");
     } else {
-      note.textContent = "Looks like you're outside our current delivery area — no problem, we'll be in touch to arrange a collection point instead.";
+      note.textContent = "Looks like you're outside our current delivery area — no problem, we collect instead. Choose a collection point below.";
       note.classList.add("zone-out");
     }
     note.classList.add("is-visible");
@@ -2596,8 +2671,18 @@
     // the variable that actually drives the fee.
     document.getElementById("methodDelivery").setAttribute("aria-pressed", wantsCollection ? "false" : "true");
     document.getElementById("methodCollect").setAttribute("aria-pressed", wantsCollection ? "true" : "false");
+
+    // The collection-point picker shows whenever a collection is actually
+    // going to happen — fully outside the zone (the only option there), or
+    // in the extended zone once "I'll collect" is chosen — and hides (and
+    // clears) the moment that stops being true, same reasoning as above.
+    var showCollectionField = tier === "out" || (tier === "extended" && wantsCollection);
+    collectionField.hidden = !showCollectionField;
+    if (!showCollectionField) clearCollectionPoint();
   }
   document.getElementById("methodDeliveryPrice").textContent = "+" + fmt(EXTENDED_DELIVERY_FEE);
+  document.getElementById("famCollectionPointOther").textContent =
+    "Somewhere else (arranged with Michaela) — +" + fmt(COLLECTION_ARRANGED_FEE);
   document.getElementById("methodDelivery").addEventListener("click", function () {
     wantsCollection = false;
     refreshPostcodeNote();
@@ -2606,6 +2691,11 @@
   document.getElementById("methodCollect").addEventListener("click", function () {
     wantsCollection = true;
     refreshPostcodeNote();
+    onOrderChange();
+  });
+  document.getElementById("famCollectionPoint").addEventListener("change", function () {
+    collectionPoint = this.value;
+    updateSendLinks(currentItems());
     onOrderChange();
   });
   document.getElementById("famPostcode").addEventListener("input", function () {
