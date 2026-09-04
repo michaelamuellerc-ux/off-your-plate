@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Off Your Plate</title>
+<title>Off Your Plate</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
 
@@ -247,8 +247,6 @@
   }
   .tier-icon svg { width: 17px; height: 17px; }
   .tier-head h2 { margin: 0; font-size: 21px; font-weight: 600; }
-  .tier-price { margin-left: auto; font-size: 14px; color: var(--ink-soft); }
-  .tier-price b { color: var(--ink); font-family: 'IBM Plex Mono', monospace; }
 
   .dish-row {
     display: grid;
@@ -294,11 +292,6 @@
   .card h3 { margin: 0; font-size: 17.5px; font-weight: 600; line-height: 1.25; }
   .card .blurb { color: var(--ink-soft); font-size: 14px; line-height: 1.55; margin: 0; flex: 1; }
   .card .unit-meta { font-size: 11.5px; color: var(--ink-faint); }
-  .price-premium {
-    flex: none; font-size: 11.5px; font-weight: 700; font-family: 'IBM Plex Mono', monospace;
-    color: var(--gold); background: var(--gold-soft); padding: 3px 8px; border-radius: var(--r-pill);
-    white-space: nowrap; margin-top: 1px;
-  }
 
   .card-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; padding-top: 10px; border-top: 1px dashed var(--line); }
   .stepper { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: var(--r-md); padding: 3px; }
@@ -542,6 +535,15 @@
     color: var(--accent-strong); font-weight: 700; text-decoration: underline; text-underline-offset: 2px;
   }
 
+  .portion-note {
+    display: flex; align-items: center; gap: 10px; padding: 11px 16px;
+    background: var(--surface-sunken); border: 1px solid var(--line); border-radius: var(--r-md);
+    margin-bottom: var(--sp-4);
+  }
+  .portion-note svg { width: 18px; height: 18px; color: var(--ink-soft); flex: none; }
+  .portion-note p { margin: 0; font-size: 13px; color: var(--ink-soft); line-height: 1.5; }
+  .portion-note b { color: var(--ink); font-weight: 700; }
+
   /* "Get a WhatsApp nudge" popup — a real dialog rather than window.prompt(),
      since a published artifact runs in a sandboxed iframe that swallows
      native browser dialogs entirely. */
@@ -765,6 +767,11 @@
       <p class="sub">Alternatively, you can arrange your own collection point with Michaela for a £4 fee. We'll make it work!</p>
     </div>
 
+    <div class="portion-note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg>
+      <p>Unless noted otherwise below (like our cookies, sold by the dozen), every dish is priced and ordered <b>per individual portion</b> — one portion is one meal's worth.</p>
+    </div>
+
     <nav class="quick-nav" id="quickNav" aria-label="Jump to a menu section"></nav>
 
     <div class="layout">
@@ -911,7 +918,7 @@
     {
       key: "breakfast", label: "Breakfast", price: 7.00, color: "var(--tier-breakfast)", soft: "var(--tier-breakfast-soft)",
       dishes: [
-        { id: "breakfast-kefir-chia", name: "Kefir Chia Pot with Berries & Bee Pollen", blurb: "Creamy kefir chia pudding, lightly sweetened with agave, topped with fresh berries and a scatter of bee pollen. Keeps well in the fridge — a proper make-ahead breakfast." },
+        { id: "breakfast-kefir-chia", name: "Kefir Chia Pot with Berries & Bee Pollen", blurb: "Creamy kefir chia pudding, lightly sweetened with agave, topped with fresh berries and a scatter of bee pollen. Keeps well in the fridge — a proper make-ahead breakfast.", unitLabel: "1 portion" },
         { id: "breakfast-egg-muffins", name: "Egg Muffin Cups", blurb: "Baked egg cups that reheat easily — pick your flavour and batch size: plain, veggie, or bacon.",
           variants: [
             { id: "plain", label: "Egg & Cheese" },
@@ -933,34 +940,34 @@
     {
       key: "veg", label: "Vegetarian", price: 10.00, color: "var(--tier-veg)", soft: "var(--tier-veg-soft)",
       rotatingSlots: 2,
-      anchor: { id: "veg-tomato-soup", name: "Roasted Tomato & Basil Soup", blurb: "Oven-roasted tomatoes, peppers and whole garlic blended into a silky, deep-flavoured soup finished with basil and cream. Perfect with toast or focaccia." },
+      anchor: { id: "veg-tomato-soup", name: "Roasted Tomato & Basil Soup", blurb: "Oven-roasted tomatoes, peppers and whole garlic blended into a silky, deep-flavoured soup finished with basil and cream. Perfect with toast or focaccia.", unitLabel: "1 portion" },
       pool: [
-        { id: "veg-enchilada-bake", name: "Sweet Potato & Black Bean Enchilada Bake", blurb: "Layered corn tortillas, spiced sweet potato and black beans in a smoky tomato sauce, baked under melted cheese." },
-        { id: "veg-feta-orzo", name: "One-Dish Baked Feta Veggie Orzo", blurb: "Roasted veg, chickpeas and orzo baked with a block of feta that melts into a creamy sauce — one dish, stir and serve." },
-        { id: "veg-fried-rice", name: "Vegetable Fried Rice", blurb: "A true one-pan fried rice with scrambled egg, peas and carrots — ready in half an hour, great way to use up leftover rice." },
-        { id: "veg-paella", name: "Vegetable Paella", blurb: "Smoky saffron-and-paprika rice with mushrooms, peppers and chickpeas, finished with a bright lemon-parsley oil — no special pan needed." }
+        { id: "veg-enchilada-bake", name: "Sweet Potato & Black Bean Enchilada Bake", blurb: "Layered corn tortillas, spiced sweet potato and black beans in a smoky tomato sauce, baked under melted cheese.", unitLabel: "1 portion" },
+        { id: "veg-feta-orzo", name: "One-Dish Baked Feta Veggie Orzo", blurb: "Roasted veg, chickpeas and orzo baked with a block of feta that melts into a creamy sauce — one dish, stir and serve.", unitLabel: "1 portion" },
+        { id: "veg-fried-rice", name: "Vegetable Fried Rice", blurb: "A true one-pan fried rice with scrambled egg, peas and carrots — ready in half an hour, great way to use up leftover rice.", unitLabel: "1 portion" },
+        { id: "veg-paella", name: "Vegetable Paella", blurb: "Smoky saffron-and-paprika rice with mushrooms, peppers and chickpeas, finished with a bright lemon-parsley oil — no special pan needed.", unitLabel: "1 portion" }
       ]
     },
     {
       key: "chicken", label: "Chicken", price: 10.50, color: "var(--tier-chicken)", soft: "var(--tier-chicken-soft)",
       rotatingSlots: 2,
-      anchor: { id: "chi-butter", name: "Crockpot Butter Chicken & Rice", blurb: "Rich, creamy tomato curry with garam masala and fresh coriander, served over rice." },
+      anchor: { id: "chi-butter", name: "Crockpot Butter Chicken & Rice", blurb: "Rich, creamy tomato curry with garam masala and fresh coriander, served over rice.", unitLabel: "1 portion" },
       pool: [
-        { id: "chi-potatoes", name: "Creamy Chicken & Potatoes", blurb: "Chicken thighs and baby potatoes in a creamy garlic sauce — a complete dish, no sides needed." },
-        { id: "chi-baked-rice", name: "One-Dish Baked Chicken & Rice", blurb: "Chicken, rice and veg all baked together in one dish — hearty, complete, and easy to portion." },
-        { id: "chi-lemon-orzo", name: "One-Skillet Lemon Chicken Orzo", blurb: "Seared chicken thighs and orzo in a bright lemon-butter pan sauce — one skillet, on the table in half an hour." },
-        { id: "chi-honey-garlic", name: "Slow Cooker Honey Garlic Chicken", blurb: "Shredded chicken in a sweet, sticky honey-garlic sauce with a touch of chilli — a true dump-and-go crockpot dish." }
+        { id: "chi-potatoes", name: "Creamy Chicken & Potatoes", blurb: "Chicken thighs and baby potatoes in a creamy garlic sauce — a complete dish, no sides needed.", unitLabel: "1 portion" },
+        { id: "chi-baked-rice", name: "One-Dish Baked Chicken & Rice", blurb: "Chicken, rice and veg all baked together in one dish — hearty, complete, and easy to portion.", unitLabel: "1 portion" },
+        { id: "chi-lemon-orzo", name: "One-Skillet Lemon Chicken Orzo", blurb: "Seared chicken thighs and orzo in a bright lemon-butter pan sauce — one skillet, on the table in half an hour.", unitLabel: "1 portion" },
+        { id: "chi-honey-garlic", name: "Slow Cooker Honey Garlic Chicken", blurb: "Shredded chicken in a sweet, sticky honey-garlic sauce with a touch of chilli — a true dump-and-go crockpot dish.", unitLabel: "1 portion" }
       ]
     },
     {
       key: "beef", label: "Beef", price: 11.50, color: "var(--tier-beef)", soft: "var(--tier-beef-soft)",
       rotatingSlots: 2,
-      anchor: { id: "beef-chile", name: "Marmee's Fabulous Chile", blurb: "Hearty beef and kidney bean chile, bulked out with fresh tomato and veg." },
+      anchor: { id: "beef-chile", name: "Marmee's Fabulous Chile", blurb: "Hearty beef and kidney bean chile, bulked out with fresh tomato and veg.", unitLabel: "1 portion" },
       pool: [
-        { id: "beef-stew", name: "Marmee's Irish Beef Stew", blurb: "Slow-braised beef with carrots and potatoes in a rich, wine-deepened broth.", price: 13.00, addOns: [ { id: "bacon", label: "Smoked bacon", price: 1.00 } ] },
-        { id: "beef-pasta-bake", name: "Baked Beef & Pasta Casserole", blurb: "A cheesy baked pasta with ground beef — rich, comforting, and great reheated." },
-        { id: "beef-mongolian", name: "Mongolian Ground Beef", blurb: "Ground beef in a sweet-savoury soy, garlic and ginger sauce — one skillet, ready in half an hour." },
-        { id: "beef-moroccan-meatballs", name: "Moroccan Meatball Tagine", blurb: "Spiced beef meatballs simmered in a warm tomato sauce — a genuine one-pot, ready in just over an hour." }
+        { id: "beef-stew", name: "Marmee's Irish Beef Stew", blurb: "Slow-braised beef with carrots and potatoes in a rich, wine-deepened broth.", price: 13.00, unitLabel: "1 portion", addOns: [ { id: "bacon", label: "Smoked bacon", price: 1.00 } ] },
+        { id: "beef-pasta-bake", name: "Baked Beef & Pasta Casserole", blurb: "A cheesy baked pasta with ground beef — rich, comforting, and great reheated.", unitLabel: "1 portion" },
+        { id: "beef-mongolian", name: "Mongolian Ground Beef", blurb: "Ground beef in a sweet-savoury soy, garlic and ginger sauce — one skillet, ready in half an hour.", unitLabel: "1 portion" },
+        { id: "beef-moroccan-meatballs", name: "Moroccan Meatball Tagine", blurb: "Spiced beef meatballs simmered in a warm tomato sauce — a genuine one-pot, ready in just over an hour.", unitLabel: "1 portion" }
       ]
     },
     {
@@ -1886,13 +1893,11 @@
 
       var head = document.createElement("div");
       head.className = "tier-head";
-      // Breakfast deliberately skips this header even though tier.price is
-      // set — that price is only a per-dish fallback (for the Kefir Chia
-      // Pot) and doesn't hold for the whole section once the Egg Muffin
-      // Cups' own variant/batch pricing is in the mix, so showing it as a
-      // blanket "per portion" figure up top would be misleading.
-      head.innerHTML = '<span class="tier-icon">' + ICONS[tier.key] + '</span><h2 class="display">' + tier.label + '</h2>' +
-        (typeof tier.price === "number" && tier.key !== "breakfast" ? '<span class="tier-price">per portion <b class="mono">' + fmt(tier.price) + '</b></span>' : '');
+      // Used to also show a blanket "per portion £X" figure on the far
+      // right here, but every dish card now carries its own per-portion
+      // price (and, since the portion-clarity pass, a "1 portion" unit
+      // label too) — the section-level figure was redundant on top of that.
+      head.innerHTML = '<span class="tier-icon">' + ICONS[tier.key] + '</span><h2 class="display">' + tier.label + '</h2>';
       section.appendChild(head);
 
       var row = document.createElement("div");
@@ -1904,13 +1909,12 @@
 
         var top = document.createElement("div");
         top.className = "card-top";
-        // A flat dish.price that runs above the tier's standard per-portion
-        // price gets a small "+£X.XX" badge next to its name, showing the
-        // premium at a glance rather than making someone compare it to the
-        // tier price shown up in the section header.
-        var premium = (typeof dish.price === "number" && typeof tier.price === "number" && dish.price > tier.price)
-          ? '<span class="price-premium">+' + fmt(dish.price - tier.price) + '</span>' : '';
-        top.innerHTML = "<h3>" + dish.name + "</h3>" + premium;
+        // Used to show a small "+£X.XX" badge here for a dish priced above
+        // the tier's standard rate (the beef stew), comparing it against the
+        // tier's "per portion £X" header — now that that header's gone (the
+        // per-dish price tag below already states the real price outright),
+        // the badge had nothing left to compare against, so it's gone too.
+        top.innerHTML = "<h3>" + dish.name + "</h3>";
         card.appendChild(top);
 
         var blurb = document.createElement("p");
@@ -2968,7 +2972,3 @@
 })();
 </script>
 
-
-
-</body>
-</html>
