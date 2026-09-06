@@ -293,6 +293,21 @@
   .card .blurb { color: var(--ink-soft); font-size: 14px; line-height: 1.55; margin: 0; flex: 1; }
   .card .unit-meta { font-size: 11.5px; color: var(--ink-faint); }
 
+  /* "See photo" — only on a dish that actually has a `photo` set (see
+     renderTiers()), sitting in the same top-right corner the old price-
+     premium badge used to occupy. */
+  .photo-btn {
+    flex: none; display: inline-flex; align-items: center; gap: 5px;
+    border: 1px solid var(--line); background: var(--surface-sunken); color: var(--ink-soft);
+    border-radius: var(--r-pill); padding: 5px 10px 5px 8px; font-size: 11.5px; font-weight: 600;
+    cursor: pointer; white-space: nowrap; margin-top: 1px; font-family: inherit;
+    transition: background var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+  }
+  .photo-btn svg { width: 13px; height: 13px; flex: none; }
+  @media (hover: hover) {
+    .photo-btn:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-strong); }
+  }
+
   .card-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; padding-top: 10px; border-top: 1px dashed var(--line); }
   .stepper { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: var(--r-md); padding: 3px; }
   .stepper button {
@@ -570,6 +585,35 @@
   .reminder-modal .btn.primary.is-disabled { opacity: .45; cursor: not-allowed; }
   @media (hover: hover) { .reminder-modal-close:hover { color: var(--ink); } }
 
+  /* Dish photo popup — same fixed-backdrop/centered-panel pattern as the
+     reminder/referral modals above, just sized around an image instead of
+     a form. One modal, reused for every dish's "See photo" button (see
+     openPhotoModal() in the script). */
+  .photo-modal-backdrop {
+    position: fixed; inset: 0; background: rgba(15,17,12,0.6); z-index: 60;
+    opacity: 0; pointer-events: none; transition: opacity var(--dur-base) var(--ease-out);
+  }
+  .photo-modal-backdrop.is-open { opacity: 1; pointer-events: auto; }
+  .photo-modal {
+    position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(.97);
+    width: min(480px, calc(100vw - 32px));
+    background: var(--surface); border-radius: var(--r-xl); box-shadow: var(--shadow-lg);
+    padding: var(--sp-3); z-index: 61; opacity: 0; pointer-events: none;
+    transition: opacity var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);
+  }
+  .photo-modal.is-open { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+  .photo-modal img {
+    display: block; width: 100%; max-height: 70vh; object-fit: cover;
+    border-radius: var(--r-md); background: var(--surface-sunken);
+  }
+  .photo-modal h3 { margin: var(--sp-3) 4px 0; font-size: 16px; }
+  .photo-modal-close {
+    position: absolute; top: 12px; right: 12px; width: 30px; height: 30px; border-radius: 50%;
+    border: none; background: rgba(255,255,255,0.92); color: var(--ink); font-size: 16px; line-height: 1;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-sm); z-index: 62;
+  }
+  @media (hover: hover) { .photo-modal-close:hover { background: #fff; } }
+
   .referral-optin { display: flex; align-items: center; gap: 10px; padding: 11px 16px; background: var(--gold-soft); border-radius: var(--r-md); margin-top: 10px; }
   .referral-optin svg { width: 18px; height: 18px; color: var(--gold); flex: none; }
   .referral-optin p { margin: 0; font-size: 13px; color: var(--ink); line-height: 1.5; }
@@ -733,6 +777,13 @@
   <input class="field" id="referralModalFriendPhone" type="text" placeholder="e.g. 07700 900456" />
   <p class="referral-modal-error" id="referralModalError"></p>
   <a href="#" id="referralModalSend" class="btn primary is-disabled" target="_top">Open WhatsApp</a>
+</div>
+
+<div class="photo-modal-backdrop" id="photoModalBackdrop"></div>
+<div class="photo-modal" id="photoModal" role="dialog" aria-modal="true" aria-labelledby="photoModalTitle">
+  <button type="button" class="photo-modal-close" id="photoModalClose" aria-label="Close">✕</button>
+  <img id="photoModalImg" src="" alt="" />
+  <h3 id="photoModalTitle" class="display"></h3>
 </div>
 
 <div class="app">
@@ -942,7 +993,7 @@
       rotatingSlots: 2,
       anchor: { id: "veg-tomato-soup", name: "Roasted Tomato & Basil Soup", blurb: "Oven-roasted tomatoes, peppers and whole garlic blended into a silky, deep-flavoured soup finished with basil and cream. Perfect with toast or focaccia.", unitLabel: "1 portion" },
       pool: [
-        { id: "veg-enchilada-bake", name: "Sweet Potato & Black Bean Enchilada Bake", blurb: "Layered corn tortillas, spiced sweet potato and black beans in a smoky tomato sauce, baked under melted cheese.", unitLabel: "1 portion" },
+        { id: "veg-enchilada-bake", name: "Sweet Potato & Black Bean Enchilada Bake", blurb: "Layered corn tortillas, spiced sweet potato and black beans in a smoky tomato sauce, baked under melted cheese.", unitLabel: "1 portion", photo: "photos/veg-enchilada-bake.jpg" },
         { id: "veg-feta-orzo", name: "One-Dish Baked Feta Veggie Orzo", blurb: "Roasted veg, chickpeas and orzo, baked with a block of feta that melts into a creamy sauce. One dish: stir and serve.", unitLabel: "1 portion" },
         { id: "veg-fried-rice", name: "Vegetable Fried Rice", blurb: "One-pan fried rice with scrambled egg, peas and carrots, ready in half an hour. A great way to use up leftover rice.", unitLabel: "1 portion" },
         { id: "veg-paella", name: "Vegetable Paella", blurb: "Smoky saffron-and-paprika rice with mushrooms, peppers and chickpeas, finished with a bright lemon-parsley oil. No special pan needed.", unitLabel: "1 portion" }
@@ -953,7 +1004,7 @@
       rotatingSlots: 2,
       anchor: { id: "chi-butter", name: "Crockpot Butter Chicken & Rice", blurb: "Rich, creamy tomato curry with garam masala and fresh coriander, served over rice.", unitLabel: "1 portion" },
       pool: [
-        { id: "chi-potatoes", name: "Creamy Chicken & Potatoes", blurb: "Chicken thighs and baby potatoes in a creamy garlic sauce. A complete dish on its own, no sides needed.", unitLabel: "1 portion" },
+        { id: "chi-potatoes", name: "Creamy Chicken & Potatoes", blurb: "Chicken thighs and baby potatoes in a creamy garlic sauce. A complete dish on its own, no sides needed.", unitLabel: "1 portion", photo: "photos/chi-potatoes.jpg" },
         { id: "chi-baked-rice", name: "One-Dish Baked Chicken & Rice", blurb: "Chicken, rice and veg, all baked together in one dish. Hearty and complete, and easy to portion out.", unitLabel: "1 portion" },
         { id: "chi-lemon-orzo", name: "One-Skillet Lemon Chicken Orzo", blurb: "Seared chicken thighs and orzo in a bright lemon-butter pan sauce. Just one skillet, on the table in half an hour.", unitLabel: "1 portion" },
         { id: "chi-honey-garlic", name: "Slow Cooker Honey Garlic Chicken", blurb: "Shredded chicken in a sweet, sticky honey-garlic sauce with a touch of chilli. Dump it in the crockpot and walk away.", unitLabel: "1 portion" }
@@ -965,7 +1016,7 @@
       anchor: { id: "beef-chile", name: "Marmee's Fabulous Chile", blurb: "Hearty beef and kidney bean chile, bulked out with fresh tomato and veg.", unitLabel: "1 portion" },
       pool: [
         { id: "beef-stew", name: "Marmee's Irish Beef Stew", blurb: "Slow-braised beef with carrots and potatoes in a rich broth, deepened with a splash of red wine.", price: 13.00, unitLabel: "1 portion", addOns: [ { id: "bacon", label: "Smoked bacon", price: 1.00 } ] },
-        { id: "beef-pasta-bake", name: "Baked Beef & Pasta Casserole", blurb: "A cheesy baked pasta with ground beef. Rich and comforting, and just as good reheated.", unitLabel: "1 portion" },
+        { id: "beef-pasta-bake", name: "Baked Beef & Pasta Casserole", blurb: "A cheesy baked pasta with ground beef. Rich and comforting, and just as good reheated.", unitLabel: "1 portion", photo: "photos/beef-pasta-bake.jpg" },
         { id: "beef-mongolian", name: "Mongolian Ground Beef", blurb: "Ground beef in a sweet-savoury soy, garlic and ginger sauce. One skillet, ready in half an hour.", unitLabel: "1 portion" },
         { id: "beef-moroccan-meatballs", name: "Moroccan Meatball Tagine", blurb: "Spiced beef meatballs, simmered in a warm tomato sauce. One pot, just over an hour.", unitLabel: "1 portion" }
       ]
@@ -973,13 +1024,13 @@
     {
       key: "sweet", label: "Baked Goods", color: "var(--tier-sweet)", soft: "var(--tier-sweet-soft)",
       dishes: [
-        { id: "sweet-banana-bread", name: "Marmee's Delectable Choc Chip Banana Bread", blurb: "Moist banana bread loaded with chocolate chips, made with properly overripe bananas. Sold by the loaf.", sizes: [
+        { id: "sweet-banana-bread", name: "Marmee's Delectable Choc Chip Banana Bread", blurb: "Moist banana bread loaded with chocolate chips, made with properly overripe bananas. Sold by the loaf.", photo: "photos/sweet-banana-bread.jpg", sizes: [
             { id: "whole", label: "Whole loaf", price: 15.00 },
             { id: "half", label: "Half loaf", price: 10.00 }
           ]
         },
         { id: "sweet-cc-cookies", name: "Marmee's Gooey Choc Chip Cookies", blurb: "Classic chewy chocolate chip cookies, baked fresh in small batches.", price: 12.00, unitLabel: "per dozen" },
-        { id: "sweet-pb-cookies", name: "Marmee's Melt-in-Your-Mouth PB & Chocolate Cookies", blurb: "Peanut butter cookie dough loaded with chocolate chips. Rich, a little salty, and usually the first to go.", price: 12.00, unitLabel: "per dozen" }
+        { id: "sweet-pb-cookies", name: "Marmee's Melt-in-Your-Mouth PB & Chocolate Cookies", blurb: "Peanut butter cookie dough loaded with chocolate chips. Rich, a little salty, and usually the first to go.", price: 12.00, unitLabel: "per dozen", photo: "photos/sweet-pb-cookies.jpg" }
       ]
     },
     {
@@ -1575,6 +1626,28 @@
     sections.forEach(function (s) { observer.observe(s); });
   }
 
+  // ---------------- dish photo popup ----------------
+  // One modal, reused for every dish's "See photo" button — only a dish
+  // with a `photo` field gets that button at all (see renderTiers()
+  // below), so this never gets opened on a dish with nothing to show.
+  function openPhotoModal(src, name) {
+    var img = document.getElementById("photoModalImg");
+    img.src = src;
+    img.alt = name;
+    document.getElementById("photoModalTitle").textContent = name;
+    document.getElementById("photoModalBackdrop").classList.add("is-open");
+    document.getElementById("photoModal").classList.add("is-open");
+  }
+  function closePhotoModal() {
+    document.getElementById("photoModalBackdrop").classList.remove("is-open");
+    document.getElementById("photoModal").classList.remove("is-open");
+  }
+  document.getElementById("photoModalClose").addEventListener("click", closePhotoModal);
+  document.getElementById("photoModalBackdrop").addEventListener("click", closePhotoModal);
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && document.getElementById("photoModal").classList.contains("is-open")) closePhotoModal();
+  });
+
   // ---------------- tiers / cards ----------------
   function stepper(dishId, dish) {
     var wrap = document.createElement("div");
@@ -1915,6 +1988,19 @@
         // per-dish price tag below already states the real price outright),
         // the badge had nothing left to compare against, so it's gone too.
         top.innerHTML = "<h3>" + dish.name + "</h3>";
+        // Only a dish with an actual photo on file gets this button — no
+        // point advertising a photo that doesn't exist yet. Add photos one
+        // at a time by setting `photo: "photos/<file>.jpg"` on a dish in
+        // TIER_SOURCE; everything else here just reacts to whether that
+        // field is present.
+        if (dish.photo) {
+          var photoBtn = document.createElement("button");
+          photoBtn.type = "button";
+          photoBtn.className = "photo-btn";
+          photoBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1.17a2 2 0 0 0 1.66-.89l.5-.75A2 2 0 0 1 11 3.5h2a2 2 0 0 1 1.67.86l.5.75A2 2 0 0 0 16.83 6H18a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z"/><circle cx="12" cy="13" r="3.2"/></svg><span>See photo</span>';
+          photoBtn.addEventListener("click", function () { openPhotoModal(dish.photo, dish.name); });
+          top.appendChild(photoBtn);
+        }
         card.appendChild(top);
 
         var blurb = document.createElement("p");
