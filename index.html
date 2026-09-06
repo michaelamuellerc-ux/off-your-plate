@@ -1061,7 +1061,7 @@
   // sanity-checking which pair this epoch puts live on that date and
   // nudging it (by whole ROTATION_PERIOD_DAYS increments, to keep both
   // dishes in a tier changing together) if it doesn't line up.
-  var ROTATION_EPOCH = new Date(2026, 7, 31); // Mon 31 Aug 2026
+  var ROTATION_EPOCH = new Date(2026, 8, 3); // Thu 3 Sep 2026 — puts the next dish-rotation flip on Thu 24 Sep 2026
   var ROTATION_PERIOD_DAYS = 21; // three weeks
   function rotationIndex(date) {
     var days = Math.floor((date - ROTATION_EPOCH) / 86400000);
@@ -1396,7 +1396,7 @@
   // never quietly keep taking orders into a week it was never meant to
   // cover. Set it back to null (and update TIERS) when the next rotation's
   // menu is ready to go live.
-  var MENU_LIVE_FROM = null;
+  var MENU_LIVE_FROM = new Date(2026, 8, 14); // Mon 14 Sep 2026 — 3-week block runs Sep 14 through Oct 4, with Mon 28–Wed 30 Sep as its last Mon–Wed window
 
   // Small, hand-drawn line icons per tier — inline so nothing external is
   // ever fetched (the artifact sandbox blocks hotlinked images anyway).
@@ -1530,6 +1530,17 @@
     return finalizeWindows(raw.filter(function (w) { return w.cutoff > now; })); // expired windows fall away, no replacement
   }
   function finalizeWindows(raw) {
+    // Never offer a window whose delivery falls in a different dish-rotation
+    // period than today's. Dish display is keyed to the REAL current date
+    // (see rotationIndex/liveRotatingDishes above), so without this a
+    // customer could order today's dishes for a slot that, by the time it's
+    // actually cooked, belongs to the next rotation's pair instead. This is
+    // self-correcting: once "today" actually reaches that rotation period,
+    // this same filter starts passing those windows through automatically,
+    // while the existing cutoff-expiry filtering will already have dropped
+    // the old ones.
+    var todayIndex = rotationIndex(new Date());
+    raw = raw.filter(function (w) { return rotationIndex(w.start) === todayIndex; });
     raw.sort(function (a, b) { return a.cutoff - b.cutoff; });
     var byId = {};
     raw.forEach(function (w, i) { w.id = "w" + i; byId[w.id] = w; });
