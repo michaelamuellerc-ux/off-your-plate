@@ -1,3 +1,4 @@
+<meta charset="utf-8">
 <title>Off Your Plate</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
@@ -214,6 +215,11 @@
   .cutoff-pill .when { font-weight: 600; }
   .cutoff-pill.urgent { background: var(--gold-soft); border-color: transparent; }
   .cutoff-pill.urgent .when { color: var(--gold); }
+  .cutoff-pill.next-menu {
+    background: transparent; border: 1px dashed var(--line);
+    white-space: normal; max-width: 220px; justify-content: center;
+  }
+  .cutoff-pill.next-menu .next-menu-text { color: var(--accent-strong); font-weight: 600; line-height: 1.35; }
 
   main { padding-top: var(--sp-6); }
 
@@ -1481,6 +1487,14 @@
   var WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   function fmtDayMonth(d) { return WEEKDAYS[d.getDay()] + " " + d.getDate() + " " + MONTHS[d.getMonth()]; }
+  function ordinalSuffix(n) {
+    var v = n % 100;
+    if (v >= 11 && v <= 13) return "th";
+    switch (n % 10) { case 1: return "st"; case 2: return "nd"; case 3: return "rd"; default: return "th"; }
+  }
+  // Only used for the "new menu coming" note — the rest of the page's dates
+  // stay suffix-free to match the existing pill/summary style.
+  function fmtDayMonthOrdinal(d) { return WEEKDAYS[d.getDay()] + " " + d.getDate() + ordinalSuffix(d.getDate()) + " " + MONTHS[d.getMonth()]; }
   function formatRange(start, end) { return fmtDayMonth(start) + " – " + fmtDayMonth(end); }
   function formatRangeShort(start, end) {
     if (start.getMonth() === end.getMonth()) return start.getDate() + "–" + end.getDate() + " " + MONTHS[end.getMonth()];
@@ -1552,11 +1566,29 @@
     // automatically, while the existing cutoff-expiry filtering will
     // already have dropped the old, no-longer-orderable windows.
     var todayIndex = rotationIndex(new Date());
-    raw = raw.filter(function (w) { return rotationIndex(w.cutoff) === todayIndex; });
-    raw.sort(function (a, b) { return a.cutoff - b.cutoff; });
+
+    // Before filtering the visible list down, look for the earliest window
+    // (by delivery start) whose cutoff already belongs to the NEXT rotation
+    // period — that's the first window that will actually carry the new
+    // menu. Used to show a "new menu coming" note at the end of the visible
+    // windows; null when the current block doesn't reach that far ahead
+    // (e.g. perpetual rolling mode, which only ever computes the next
+    // couple of windows).
+    var nextMenuWindow = null;
+    raw.slice().sort(function (a, b) { return a.start - b.start; }).some(function (w) {
+      if (rotationIndex(w.cutoff) === todayIndex + 1) { nextMenuWindow = w; return true; }
+      return false;
+    });
+    var nextMenu = nextMenuWindow ? {
+      flipDate: new Date(ROTATION_EPOCH.getTime() + (todayIndex + 1) * ROTATION_PERIOD_DAYS * 86400000),
+      window: nextMenuWindow
+    } : null;
+
+    var visible = raw.filter(function (w) { return rotationIndex(w.cutoff) === todayIndex; });
+    visible.sort(function (a, b) { return a.cutoff - b.cutoff; });
     var byId = {};
-    raw.forEach(function (w, i) { w.id = "w" + i; byId[w.id] = w; });
-    return { list: raw, byId: byId };
+    visible.forEach(function (w, i) { w.id = "w" + i; byId[w.id] = w; });
+    return { list: visible, byId: byId, nextMenu: nextMenu };
   }
   function windowFullLabel(id) {
     var info = WINDOWS.byId[id];
@@ -1608,10 +1640,16 @@
 
   function renderCutoffs() {
     var el = document.getElementById("cutoffs");
-    el.innerHTML = WINDOWS.list.map(function (w) {
+    var html = WINDOWS.list.map(function (w) {
       var d = describeCutoff(w.cutoff);
       return '<div class="cutoff-pill' + (d.urgent ? ' urgent' : '') + '"><span class="who">' + w.dayLabel + ' · ' + formatRangeShort(w.start, w.end) + '</span><span class="when">Order by ' + d.when + '</span></div>';
     }).join("");
+    if (WINDOWS.nextMenu) {
+      html += '<div class="cutoff-pill next-menu"><span class="next-menu-text">New menu live on ' +
+        fmtDayMonthOrdinal(WINDOWS.nextMenu.flipDate) + ' for the window beginning ' +
+        fmtDayMonthOrdinal(WINDOWS.nextMenu.window.start) + '</span></div>';
+    }
+    el.innerHTML = html;
   }
 
   // ---------------- quick nav ----------------
