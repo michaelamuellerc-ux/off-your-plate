@@ -1518,29 +1518,41 @@
   function computeFixedRotationWindows(monday) {
     var sat0 = new Date(monday); sat0.setDate(sat0.getDate() - 2); sat0.setHours(17, 0, 0, 0);
     var tue0 = new Date(monday); tue0.setDate(tue0.getDate() + 1); tue0.setHours(17, 0, 0, 0);
-    var raw = [
-      { cutoff: sat0, start: addDays(sat0, 2), end: addDays(sat0, 4), dayLabel: "Mon–Wed" },
-      { cutoff: tue0, start: addDays(tue0, 2), end: addDays(tue0, 5), dayLabel: "Thu–Sun" },
-      { cutoff: addWeeks(sat0, 1), start: addDays(addWeeks(sat0, 1), 2), end: addDays(addWeeks(sat0, 1), 4), dayLabel: "Mon–Wed" },
-      { cutoff: addWeeks(tue0, 1), start: addDays(addWeeks(tue0, 1), 2), end: addDays(addWeeks(tue0, 1), 5), dayLabel: "Thu–Sun" },
-      { cutoff: addWeeks(sat0, 2), start: addDays(addWeeks(sat0, 2), 2), end: addDays(addWeeks(sat0, 2), 4), dayLabel: "Mon–Wed" },
-      { cutoff: addWeeks(tue0, 2), start: addDays(addWeeks(tue0, 2), 2), end: addDays(addWeeks(tue0, 2), 5), dayLabel: "Thu–Sun" }
-    ];
     var now = new Date();
+    // The 3-week ordering block always runs through week offsets 0, 1 and 2
+    // relative to the anchor Monday (that's what keeps, e.g., "Mon 28-30"
+    // as the fixed last Mon-Wed window). But when MENU_LIVE_FROM is set a
+    // few days out, the week just BEFORE the anchor can still have a window
+    // whose cutoff hasn't passed yet (e.g. anchor = Mon 14 Sep, "now" = Sun
+    // 6 Sep -> the Thu 10-13 Sep window, cutoff Tue 8 Sep, is still open).
+    // Skipping it would make a genuinely orderable current-menu window
+    // vanish from the site. Reach back as many whole weeks as it takes to
+    // cover from "now" up to the anchor — the cutoff-expiry filter below
+    // trims anything reached back to that's actually already closed.
+    var weeksBack = Math.max(0, Math.ceil((monday - now) / (7 * 86400000)));
+    var raw = [];
+    for (var wk = -weeksBack; wk <= 2; wk++) {
+      raw.push({ cutoff: addWeeks(sat0, wk), start: addDays(addWeeks(sat0, wk), 2), end: addDays(addWeeks(sat0, wk), 4), dayLabel: "Mon–Wed" });
+      raw.push({ cutoff: addWeeks(tue0, wk), start: addDays(addWeeks(tue0, wk), 2), end: addDays(addWeeks(tue0, wk), 5), dayLabel: "Thu–Sun" });
+    }
     return finalizeWindows(raw.filter(function (w) { return w.cutoff > now; })); // expired windows fall away, no replacement
   }
   function finalizeWindows(raw) {
-    // Never offer a window whose delivery falls in a different dish-rotation
-    // period than today's. Dish display is keyed to the REAL current date
-    // (see rotationIndex/liveRotatingDishes above), so without this a
-    // customer could order today's dishes for a slot that, by the time it's
-    // actually cooked, belongs to the next rotation's pair instead. This is
-    // self-correcting: once "today" actually reaches that rotation period,
-    // this same filter starts passing those windows through automatically,
-    // while the existing cutoff-expiry filtering will already have dropped
-    // the old ones.
+    // Never offer a window whose CUTOFF falls in a different dish-rotation
+    // period than today's. The cutoff — not the delivery date — is what
+    // decides which menu a customer actually ordered from: an order locked
+    // in before the rotation flips is still an old-menu order even if its
+    // delivery lands on or after flip day, because nothing about that
+    // in-flight order changes when the site's display later rolls over.
+    // Gating on the delivery date instead would wrongly hide a window like
+    // "Thu 24-27" when the flip lands ON the 24th but the window's cutoff
+    // (two-plus days earlier) is still safely in the current period.
+    // This stays self-correcting: once "today" actually reaches a given
+    // window's rotation period, this filter starts passing it through
+    // automatically, while the existing cutoff-expiry filtering will
+    // already have dropped the old, no-longer-orderable windows.
     var todayIndex = rotationIndex(new Date());
-    raw = raw.filter(function (w) { return rotationIndex(w.start) === todayIndex; });
+    raw = raw.filter(function (w) { return rotationIndex(w.cutoff) === todayIndex; });
     raw.sort(function (a, b) { return a.cutoff - b.cutoff; });
     var byId = {};
     raw.forEach(function (w, i) { w.id = "w" + i; byId[w.id] = w; });
