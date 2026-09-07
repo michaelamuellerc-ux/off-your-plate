@@ -101,6 +101,41 @@ async function redisSmembers(key) {
   return data.result || [];
 }
 
+// Pushes one value onto the head of a list — used for the per-visit
+// timestamped log (log-visit.js), where each new hit needs to be the new
+// "most recent" entry rather than merged/counted like the incr/sadd keys
+// above.
+async function redisLpush(key, value) {
+  const res = await fetch(UPSTASH_URL + "/lpush/" + encodeURIComponent(key) + "/" + encodeURIComponent(value), {
+    headers: { Authorization: "Bearer " + UPSTASH_TOKEN }
+  });
+  if (!res.ok) throw new Error("redis lpush failed: " + res.status);
+  const data = await res.json();
+  return data.result;
+}
+
+// Inclusive range, head-first (so 0..N-1 is "the N most recent pushes").
+async function redisLrange(key, start, stop) {
+  const res = await fetch(UPSTASH_URL + "/lrange/" + encodeURIComponent(key) + "/" + start + "/" + stop, {
+    headers: { Authorization: "Bearer " + UPSTASH_TOKEN }
+  });
+  if (!res.ok) throw new Error("redis lrange failed: " + res.status);
+  const data = await res.json();
+  return data.result || [];
+}
+
+// Trims a list down to just the given range — used right after each
+// lpush to cap the visit log at a fixed length, so it can never grow
+// without bound.
+async function redisLtrim(key, start, stop) {
+  const res = await fetch(UPSTASH_URL + "/ltrim/" + encodeURIComponent(key) + "/" + start + "/" + stop, {
+    headers: { Authorization: "Bearer " + UPSTASH_TOKEN }
+  });
+  if (!res.ok) throw new Error("redis ltrim failed: " + res.status);
+  const data = await res.json();
+  return data.result;
+}
+
 module.exports = {
   isFirst10Code,
   decodeReferralCode,
@@ -111,6 +146,9 @@ module.exports = {
   redisIncr,
   redisSadd,
   redisSmembers,
+  redisLpush,
+  redisLrange,
+  redisLtrim,
   ORDER_CAP,
   isValidWindowDate
 };
