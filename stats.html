@@ -255,15 +255,29 @@
 
   function loadStats(key) {
     gateErr.textContent = "";
-    function getJson(url) {
+    // Labelled + status-carrying rejections, so a failure names which
+    // endpoint it came from and what HTTP status it got back — a plain
+    // "bad key" message can't tell a real key mismatch (both endpoints
+    // 404 the same way) apart from just one endpoint being missing from
+    // the deploy (e.g. api/feedback-list.js not pushed yet), which also
+    // 404s but for an unrelated reason.
+    function getJson(label, url) {
       return fetch(url).then(function (res) {
-        if (!res.ok) throw new Error("bad key");
+        if (!res.ok) {
+          var e = new Error("request failed");
+          e.label = label;
+          e.status = res.status;
+          throw e;
+        }
         return res.json();
+      }, function (networkErr) {
+        networkErr.label = label;
+        throw networkErr;
       });
     }
     return Promise.all([
-      getJson("/api/visit-stats?key=" + encodeURIComponent(key) + "&days=30&log=200"),
-      getJson("/api/feedback-list?key=" + encodeURIComponent(key) + "&limit=200")
+      getJson("visit-stats", "/api/visit-stats?key=" + encodeURIComponent(key) + "&days=30&log=200"),
+      getJson("feedback-list", "/api/feedback-list?key=" + encodeURIComponent(key) + "&limit=200")
     ])
       .then(function (results) {
         var data = results[0], fb = results[1];
@@ -275,8 +289,9 @@
         renderFeedback(fb.feedback || []);
         return true;
       })
-      .catch(function () {
-        gateErr.textContent = "Couldn't load stats with that key — check STATS_KEY on Vercel matches what you typed here.";
+      .catch(function (e) {
+        var detail = e && e.label ? " — the " + e.label + " request " + (e.status ? "returned HTTP " + e.status : "failed to reach the server") : "";
+        gateErr.textContent = "Couldn't load stats with that key" + detail + ". Check STATS_KEY on Vercel matches what you typed here, and that every site file (including api/" + (e && e.label === "feedback-list" ? "feedback-list.js and api/record-feedback.js" : "visit-stats.js") + ") was actually deployed.";
         return false;
       });
   }
