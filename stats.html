@@ -69,9 +69,14 @@
   .bar-track { flex: 1; height: 8px; border-radius: var(--r-pill); background: var(--surface-sunken); overflow: hidden; }
   .bar-fill { height: 100%; background: var(--accent); border-radius: var(--r-pill); }
   .src-pill { display: inline-block; padding: 2px 8px; border-radius: var(--r-pill); font-size: 11px; font-weight: 700; background: var(--accent-soft); color: var(--accent-strong); margin: 0 4px 4px 0; }
+  .rating-pill { display: inline-block; padding: 2px 8px; border-radius: var(--r-pill); font-size: 11px; font-weight: 700; white-space: nowrap; }
+  .rating-pill.loved { background: var(--accent-soft); color: var(--accent-strong); }
+  .rating-pill.meh { background: var(--surface-sunken); color: var(--ink-soft); }
+  .fb-tier { color: var(--ink-faint); font-size: 11px; display: block; }
   .empty { color: var(--ink-faint); font-size: 13px; padding: var(--sp-6) 0; text-align: center; }
   .reload-row { display: flex; align-items: center; gap: 10px; margin-bottom: var(--sp-4); }
   .reload-row button { border: 1px solid var(--line); background: var(--surface-sunken); color: var(--ink); border-radius: var(--r-pill); padding: 6px 14px; font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .panel + .panel { margin-top: var(--sp-6); }
 </style>
 </head>
 <body>
@@ -79,7 +84,7 @@
 <header class="top">
   <div class="inner">
     <h1 class="display">Site visits</h1>
-    <p>Daily hits to Off Your Plate, split out by where they came from — tag a link with <code>?src=flyer1</code> (or whatever you like) to tell it apart from direct traffic.</p>
+    <p>Daily hits to Off Your Plate, split out by where they came from — tag a link with <code>?src=flyer1</code> (or whatever you like) to tell it apart from direct traffic. The printed flyer's QR code is already tagged <code>?src=qr</code>, so a scan always shows up separately from someone typing the address in by hand ("direct").</p>
   </div>
 </header>
 
@@ -98,6 +103,28 @@
       <span id="reloadFlash" style="font-size:12.5px;color:var(--ink-soft);"></span>
     </div>
     <div class="stats" id="statCards"></div>
+    <section class="panel">
+      <h2>Dish feedback</h2>
+      <p class="sub">Submitted straight from the site's "How was it?" card — no WhatsApp involved. Newest first, last 500 kept.</p>
+      <div class="table-wrap">
+        <table id="feedbackTable" hidden>
+          <thead><tr><th>When</th><th>Dish</th><th>Rating</th><th>Comments</th></tr></thead>
+          <tbody id="feedbackBody"></tbody>
+        </table>
+        <div class="empty" id="feedbackEmpty">No feedback submitted yet.</div>
+      </div>
+    </section>
+    <section class="panel">
+      <h2>Recent visits</h2>
+      <p class="sub">Every individual hit, exact time and source, newest first — the last 500 are kept; older ones roll off (the daily totals below go back further, just without the per-visit detail).</p>
+      <div class="table-wrap">
+        <table id="recentTable" hidden>
+          <thead><tr><th>When</th><th>Source</th></tr></thead>
+          <tbody id="recentBody"></tbody>
+        </table>
+        <div class="empty" id="recentEmpty">No visits logged yet.</div>
+      </div>
+    </section>
     <section class="panel">
       <h2>By day</h2>
       <p class="sub">Last 30 days, newest first.</p>
@@ -130,11 +157,66 @@
     return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
   }
 
+  // Hand-fixed to UK time (not the viewer's own device locale/timezone) so
+  // this reads the same regardless of where Michaela happens to be looking
+  // from — matching the day-formatting choice just above.
+  function fmtWhen(iso) {
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    var datePart = d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Europe/London" });
+    var timePart = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "Europe/London" });
+    return datePart + ", " + timePart;
+  }
+
   var gate = document.getElementById("gate");
   var gateErr = document.getElementById("gateErr");
   var keyInput = document.getElementById("keyInput");
   var statsView = document.getElementById("statsView");
   var reloadFlash = document.getElementById("reloadFlash");
+
+  function renderRecent(recent) {
+    var table = document.getElementById("recentTable");
+    var body = document.getElementById("recentBody");
+    var empty = document.getElementById("recentEmpty");
+    if (!recent.length) {
+      table.hidden = true;
+      empty.hidden = false;
+      return;
+    }
+    table.hidden = false;
+    empty.hidden = true;
+    body.innerHTML = recent.map(function (v) {
+      return "<tr>" +
+        '<td class="mono">' + esc(fmtWhen(v.t)) + "</td>" +
+        '<td><span class="src-pill">' + esc(v.source) + "</span></td>" +
+        "</tr>";
+    }).join("");
+  }
+
+  function renderFeedback(feedback) {
+    var table = document.getElementById("feedbackTable");
+    var body = document.getElementById("feedbackBody");
+    var empty = document.getElementById("feedbackEmpty");
+    if (!feedback.length) {
+      table.hidden = true;
+      empty.hidden = false;
+      return;
+    }
+    table.hidden = false;
+    empty.hidden = true;
+    body.innerHTML = feedback.map(function (f) {
+      var loved = f.rating === "loved";
+      var ratingHtml = '<span class="rating-pill ' + (loved ? "loved" : "meh") + '">' + (loved ? "😍 Loved it" : "😕 Not for us") + "</span>";
+      var dishHtml = esc(f.dishName) + (f.tierLabel ? '<span class="fb-tier">' + esc(f.tierLabel) + "</span>" : "");
+      var commentsHtml = f.comments ? esc(f.comments) : '<span style="color:var(--ink-faint)">—</span>';
+      return "<tr>" +
+        '<td class="mono">' + esc(fmtWhen(f.t)) + "</td>" +
+        "<td>" + dishHtml + "</td>" +
+        "<td>" + ratingHtml + "</td>" +
+        "<td>" + commentsHtml + "</td>" +
+        "</tr>";
+    }).join("");
+  }
 
   function renderStats(days) {
     var totalAll = days.reduce(function (sum, d) { return sum + d.total; }, 0);
@@ -173,16 +255,24 @@
 
   function loadStats(key) {
     gateErr.textContent = "";
-    return fetch("/api/visit-stats?key=" + encodeURIComponent(key) + "&days=30")
-      .then(function (res) {
+    function getJson(url) {
+      return fetch(url).then(function (res) {
         if (!res.ok) throw new Error("bad key");
         return res.json();
-      })
-      .then(function (data) {
+      });
+    }
+    return Promise.all([
+      getJson("/api/visit-stats?key=" + encodeURIComponent(key) + "&days=30&log=200"),
+      getJson("/api/feedback-list?key=" + encodeURIComponent(key) + "&limit=200")
+    ])
+      .then(function (results) {
+        var data = results[0], fb = results[1];
         try { localStorage.setItem(STORAGE_KEY, key); } catch (e) {}
         gate.hidden = true;
         statsView.hidden = false;
         renderStats(data.days || []);
+        renderRecent(data.recent || []);
+        renderFeedback(fb.feedback || []);
         return true;
       })
       .catch(function () {
