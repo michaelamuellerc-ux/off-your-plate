@@ -720,6 +720,9 @@
     .feedback-controls { flex-direction: column; align-items: stretch; }
     .feedback-controls .btn { width: 100%; }
   }
+  .feedback-status { margin: 2px 0 0; font-size: 13px; font-weight: 600; min-height: 1.3em; }
+  .feedback-status.ok { color: var(--accent-strong); }
+  .feedback-status.err { color: var(--danger); }
 
   footer.legal { max-width: 1180px; margin: var(--sp-10) auto 0; padding: var(--sp-5) 20px 24px; border-top: 1px solid var(--line); color: var(--ink-faint); font-size: 12px; line-height: 1.6; }
 
@@ -928,8 +931,9 @@
         </div>
         <label class="field feedback-comments-label" for="feedbackComments">Additional comments</label>
         <textarea class="field feedback-comments" id="feedbackComments" rows="2" placeholder="Optional"></textarea>
-        <a class="btn primary" id="feedbackSend" href="#" target="_top">Send feedback</a>
+        <button type="button" class="btn primary" id="feedbackSend">Send feedback</button>
       </div>
+      <p class="feedback-status" id="feedbackStatus" aria-live="polite"></p>
     </div>
   </section>
 
@@ -2933,6 +2937,11 @@
   var FEEDBACK_DISH_MAP = {};
   FEEDBACK_GROUPS.forEach(function (g) { g.dishes.forEach(function (d) { FEEDBACK_DISH_MAP[d.id] = d; }); });
 
+  // Submits straight to /api/record-feedback instead of building a wa.me
+  // link — feedback used to require the customer to also hit Send inside
+  // WhatsApp themselves, which is exactly the extra back-and-forth this
+  // replaces. Ordering and the WhatsApp nudge/referral features are
+  // untouched; this is the one place that no longer touches WhatsApp at all.
   (function initFeedback() {
     var select = document.getElementById("feedbackDish");
     select.innerHTML = '<option value="" disabled selected>Choose a dish…</option>' +
@@ -2942,47 +2951,71 @@
           '</optgroup>';
       }).join("");
 
-    var link = document.getElementById("feedbackSend");
+    var btn = document.getElementById("feedbackSend");
     var comments = document.getElementById("feedbackComments");
+    var status = document.getElementById("feedbackStatus");
     var rating = null; // "loved" | "meh"
+    var sending = false;
 
-    function refresh() {
-      var dishId = select.value;
-      var ready = !!dishId && !!rating;
-      link.style.pointerEvents = ready ? "auto" : "none";
-      link.style.opacity = ready ? 1 : .45;
-      if (!ready) return;
-      var dish = FEEDBACK_DISH_MAP[dishId];
-      var line = rating === "loved" ? "We loved this! 😍" : "This wasn't our fave 😕";
-      var extra = comments.value.trim();
-      // Structured "Label: value" lines (same pattern as the order message)
-      // so the Tracker can log this automatically — dish, category and
-      // rating first as plain data, the friendly sentence and any comment
-      // after so it still reads naturally in WhatsApp.
-      var msg = "Off Your Plate feedback\n\n"
-        + "Dish: " + dish.name + "\n"
-        + "Category: " + dish.tierLabel + "\n"
-        + "Rating: " + (rating === "loved" ? "Loved it" : "Not for us") + "\n"
-        + (extra ? "Comments: " + extra + "\n\n" : "\n")
-        + line;
-      link.href = "https://wa.me/" + OWNER_WHATSAPP + "?text=" + encodeURIComponent(msg);
+    function ready() { return !!select.value && !!rating && !sending; }
+    function refresh() { btn.disabled = !ready(); }
+
+    function setStatus(text, kind) {
+      status.textContent = text;
+      status.className = "feedback-status" + (kind ? " " + kind : "");
     }
 
-    refresh(); // starts disabled until both a dish and a rating are picked
+    function resetForm() {
+      select.value = "";
+      rating = null;
+      document.querySelectorAll(".feedback-choice").forEach(function (b) { b.classList.remove("active"); });
+      comments.value = "";
+    }
+
+    btn.disabled = true; // starts disabled until both a dish and a rating are picked
     select.addEventListener("change", refresh);
-    comments.addEventListener("input", refresh);
-    document.querySelectorAll(".feedback-choice").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        rating = btn.dataset.rating;
-        document.querySelectorAll(".feedback-choice").forEach(function (b) { b.classList.toggle("active", b === btn); });
+    document.querySelectorAll(".feedback-choice").forEach(function (choiceBtn) {
+      choiceBtn.addEventListener("click", function () {
+        rating = choiceBtn.dataset.rating;
+        document.querySelectorAll(".feedback-choice").forEach(function (b) { b.classList.toggle("active", b === choiceBtn); });
         refresh();
       });
     });
-    link.addEventListener("click", function () {
-      if (link.style.pointerEvents === "none") return;
-      var old = link.textContent;
-      link.textContent = "Feedback sent ✓";
-      setTimeout(function () { if (link.style.pointerEvents !== "none") link.textContent = old; }, 2200);
+
+    btn.addEventListener("click", function () {
+      if (!ready()) return;
+      var dish = FEEDBACK_DISH_MAP[select.value];
+      var payload = {
+        dishId: select.value,
+        dishName: dish.name,
+        tierLabel: dish.tierLabel,
+        rating: rating,
+        comments: comments.value.trim()
+      };
+      sending = true;
+      refresh();
+      setStatus("Sending…", "");
+      fetch("/api/record-feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      })
+        .then(function (res) { return res.json().catch(function () { return {}; }); })
+        .then(function (data) {
+          sending = false;
+          if (data && data.recorded) {
+            resetForm();
+            setStatus("Thanks — feedback sent ✓", "ok");
+          } else {
+            setStatus("Something went wrong — please try again.", "err");
+          }
+          refresh();
+        })
+        .catch(function () {
+          sending = false;
+          setStatus("Something went wrong — please try again.", "err");
+          refresh();
+        });
     });
   })();
 
