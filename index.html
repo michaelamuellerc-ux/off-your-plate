@@ -298,6 +298,8 @@
   .card h3 { margin: 0; font-size: 17.5px; font-weight: 600; line-height: 1.25; }
   .card .blurb { color: var(--ink-soft); font-size: 14px; line-height: 1.55; margin: 0; flex: 1; }
   .card .unit-meta { font-size: 11.5px; color: var(--ink-faint); }
+  .card .bulk-hint { font-size: 11.5px; color: var(--tier-color); opacity: 0.85; }
+  .card .bulk-hint.is-active { opacity: 1; font-weight: 600; }
 
   /* "See photo" — only on a dish that actually has a `photo` set (see
      renderTiers()), sitting in the same top-right corner the old price-
@@ -424,6 +426,7 @@
   }
   .order-panel h2 { margin: 0 0 2px; font-size: 17px; }
   .order-panel .sub { color: var(--ink-soft); font-size: 12px; margin: 0 0 8px; }
+  .bulk-note { color: var(--ink-faint); font-size: 11.5px; line-height: 1.45; margin: 0 0 12px; }
   .order-items { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; max-height: 180px; overflow-y: auto; }
   .order-empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; color: var(--ink-faint); font-size: 13px; padding: 14px 4px 10px; }
   .order-empty svg { width: 34px; height: 34px; color: var(--ink-faint); opacity: .7; }
@@ -841,6 +844,7 @@
         <button class="sheet-close" id="sheetClose" aria-label="Close order"></button>
         <h2 class="display">Your order</h2>
         <p class="sub">Review, then send it straight to Michaela.</p>
+        <p class="bulk-note">Order 4 or more portions of the same main and the price drops by £1 each — applied automatically, right in your cart.</p>
         <div class="order-items" id="orderItems"></div>
         <div class="order-discount" id="orderDiscount" hidden>
           <span class="label" id="orderDiscountLabel">Discount</span>
@@ -1348,6 +1352,18 @@
   // shouldn't have to buy extra food just because their delivery fee pushed
   // them over the line. Delivery fee is added afterwards, on top.
   var MINIMUM_ORDER = 20;
+  // Bulk-per-dish pricing: ordering 4 or more portions of the SAME main
+  // (same dish, in the same delivery slot — see dishActiveQty below) drops
+  // that dish to £1/portion cheaper for every portion in that line. Mains
+  // only (veg/chicken/beef) — the point is to reward a customer taking a
+  // whole batch of one dish rather than splitting it across many small
+  // orders, which doesn't apply to baked goods/snacks sold by the dozen or
+  // loaf. Applied directly to the per-portion price rather than as a
+  // separate discount line, so it shows up live on the dish card as soon as
+  // the stepper reaches the threshold.
+  var BULK_DISCOUNT_TIERS = { veg: true, chicken: true, beef: true };
+  var BULK_DISCOUNT_THRESHOLD = 4;
+  var BULK_DISCOUNT_PER_PORTION = 1;
   // Pulls the outward code (area + district number, e.g. "EC1" out of
   // "EC1V 9NR" or "N1" out of "n1 2ab") out of whatever someone typed, so
   // matching is exact rather than a risky substring check — "N1" must never
@@ -1899,20 +1915,65 @@
     WINDOWS.list.forEach(function (w) { sum += state.qty[qtyKeyFromConfig(configKey, w.id)] || 0; });
     return sum;
   }
+  // Which slot a dish card is currently pointed at, and how many of that
+  // exact line (dish + variant/size + slot) are already in the cart — the
+  // same slot the stepper itself is showing/editing (see currentWindowId
+  // inside stepper()). Used to decide, live, whether the bulk per-dish price
+  // break has kicked in for what's on screen right now.
+  function dishActiveWindowId(dishId, dish) {
+    var configKey = dishLineKey(dishId, dish);
+    return state.window[configKey] || defaultWindowId();
+  }
+  function dishActiveQty(dishId, dish) {
+    return state.qty[dishQtyKey(dishId, dish, dishActiveWindowId(dishId, dish))] || 0;
+  }
+  // £1/portion off once a single line (one dish, one slot) reaches 4 — mains
+  // tiers only (see BULK_DISCOUNT_TIERS). dishId here is enough to look up
+  // the tier via DISH_MAP without threading tier info through every caller.
+  function bulkDiscountEligible(dishId) {
+    var entry = DISH_MAP[dishId];
+    return !!(entry && BULK_DISCOUNT_TIERS[entry.tier.key]);
+  }
+  function bulkDiscountPerPortion(dishId, qty) {
+    return (bulkDiscountEligible(dishId) && qty >= BULK_DISCOUNT_THRESHOLD) ? BULK_DISCOUNT_PER_PORTION : 0;
+  }
+  // Mains (the only dishes BULK_DISCOUNT_TIERS ever applies to) are always
+  // priced as either a flat override (dish.price, e.g. the beef stew) or the
+  // tier default — never by sizes/variants — so the pre-discount price for
+  // the hint below doesn't need dishBasePrice's full branching.
+  function mainNominalPrice(dishId, dish, tierPrice) {
+    return typeof dish.price === "number" ? dish.price : tierPrice;
+  }
+  // Keeps the "order N more and it clicks in" hint under each eligible main
+  // in sync with that dish's own line — shown up front so the price break
+  // is something a customer can plan toward, not a surprise once the total
+  // changes, and flips to a confirmation once it's actually applied.
+  function updateBulkHint(el, dishId, dish, tierPrice) {
+    var qty = dishActiveQty(dishId, dish);
+    var discPrice = mainNominalPrice(dishId, dish, tierPrice) - BULK_DISCOUNT_PER_PORTION;
+    var reached = qty >= BULK_DISCOUNT_THRESHOLD;
+    el.classList.toggle("is-active", reached);
+    el.textContent = reached
+      ? "Bulk pricing active"
+      : ("Buy " + BULK_DISCOUNT_THRESHOLD + "+, save £" + BULK_DISCOUNT_PER_PORTION + " each");
+  }
   // Config-based equivalents of dishBasePrice/dishSizeLabel (below), used for
   // lines already sitting in the cart: a line's price and label stay pinned
   // to the variant/batch/size it was added with even if the customer goes on
   // to change the dish card's current on-screen selection afterwards.
-  function priceForConfig(dish, tierPrice, variantId, batchId, sizeId) {
+  function priceForConfig(dish, tierPrice, variantId, batchId, sizeId, dishId, qty) {
+    var base;
     if (dish.variants && dish.batchSizes && dish.priceMatrix) {
-      return dish.priceMatrix[variantId + "|" + batchId];
-    }
-    if (dish.sizes) {
+      base = dish.priceMatrix[variantId + "|" + batchId];
+    } else if (dish.sizes) {
       var match = dish.sizes.filter(function (s) { return s.id === sizeId; })[0];
-      return (match || dish.sizes[0]).price;
+      base = (match || dish.sizes[0]).price;
+    } else if (typeof dish.price === "number") {
+      base = dish.price;
+    } else {
+      base = tierPrice;
     }
-    if (typeof dish.price === "number") return dish.price;
-    return tierPrice;
+    return base - bulkDiscountPerPortion(dishId, qty || 0);
   }
   function labelForConfig(dish, variantId, batchId, sizeId) {
     if (dish.variants && dish.batchSizes) {
@@ -1988,16 +2049,19 @@
   // once (e.g. the egg muffin cups' flavour AND batch size), a `variants` +
   // `batchSizes` pair looked up together in `priceMatrix`.
   function dishBasePrice(dishId, dish, tierPrice) {
+    var base;
     if (dish.variants && dish.batchSizes && dish.priceMatrix) {
-      return dish.priceMatrix[dishVariantId(dishId, dish) + "|" + dishBatchId(dishId, dish)];
-    }
-    if (dish.sizes) {
+      base = dish.priceMatrix[dishVariantId(dishId, dish) + "|" + dishBatchId(dishId, dish)];
+    } else if (dish.sizes) {
       var selected = state.size[dishId] || dish.sizes[0].id;
       var match = dish.sizes.filter(function (s) { return s.id === selected; })[0];
-      return (match || dish.sizes[0]).price;
+      base = (match || dish.sizes[0]).price;
+    } else if (typeof dish.price === "number") {
+      base = dish.price;
+    } else {
+      base = tierPrice;
     }
-    if (typeof dish.price === "number") return dish.price;
-    return tierPrice;
+    return base - bulkDiscountPerPortion(dishId, dishActiveQty(dishId, dish));
   }
 
   function dishSizeLabel(dishId, dish) {
@@ -2095,6 +2159,14 @@
           card.appendChild(batchToggle(dish.id, dish));
         }
 
+        if (bulkDiscountEligible(dish.id)) {
+          var bulkHint = document.createElement("div");
+          bulkHint.className = "bulk-hint mono";
+          bulkHint.dataset.for = dish.id;
+          card.appendChild(bulkHint);
+          updateBulkHint(bulkHint, dish.id, dish, tier.price);
+        }
+
         var foot = document.createElement("div");
         foot.className = "card-foot";
         var priceTag = document.createElement("span");
@@ -2131,7 +2203,7 @@
         var extra = addOns.reduce(function (s, a) { return s + a.price; }, 0);
         items.push({
           id: key, name: entry.dish.name, tier: entry.tier.label,
-          price: priceForConfig(entry.dish, entry.tier.price, meta.variantId, meta.batchId, meta.sizeId) + extra,
+          price: priceForConfig(entry.dish, entry.tier.price, meta.variantId, meta.batchId, meta.sizeId, meta.dishId, q) + extra,
           addOns: addOns,
           sizeLabel: labelForConfig(entry.dish, meta.variantId, meta.batchId, meta.sizeId),
           qty: q, window: meta.windowId || WINDOWS.list[0].id
@@ -2317,6 +2389,12 @@
       var id = p.dataset.for;
       var entry = DISH_MAP[id];
       p.textContent = fmt(dishUnitPrice(id, entry.dish, entry.tier.price));
+    });
+    document.querySelectorAll(".bulk-hint").forEach(function (el) {
+      var id = el.dataset.for;
+      var entry = DISH_MAP[id];
+      if (!entry) return;
+      updateBulkHint(el, id, entry.dish, entry.tier.price);
     });
     // The batch-size buttons' own prices depend on which flavour is picked
     // (e.g. the bacon egg muffins cost more than plain/veg), so refresh them
