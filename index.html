@@ -1,5 +1,9 @@
 <meta charset="utf-8">
 <title>Off Your Plate</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
 
@@ -146,8 +150,8 @@
     position: sticky;
     top: 0;
     z-index: 21;
-    background: linear-gradient(90deg, var(--accent-strong), var(--accent));
-    color: var(--accent-ink);
+    background: linear-gradient(90deg, #23281F, #3A4433);
+    color: #F6F4EE;
     overflow: hidden;
     white-space: nowrap;
     padding: 8px 0;
@@ -156,7 +160,7 @@
   }
   .promo-track { display: inline-flex; gap: 56px; padding-left: 56px; width: max-content; }
   .promo-item { display: inline-flex; align-items: center; gap: 6px; }
-  .promo-item b { text-transform: uppercase; letter-spacing: .05em; }
+  .promo-item b { text-transform: uppercase; letter-spacing: .05em; color: #EAB05F; }
   @media (prefers-reduced-motion: no-preference) {
     .promo-track { animation: promoSlide 18s linear infinite; }
   }
@@ -181,6 +185,8 @@
   header.top.scrolled { box-shadow: 0 6px 20px -14px rgba(35,40,31,0.35); }
   .top-inner { max-width: 1180px; margin: 0 auto; }
   .brand { display: flex; align-items: baseline; gap: 10px; }
+  .brand-row { display: flex; align-items: center; gap: 8px; }
+  .brand-mark { width: 26px; height: 26px; flex: none; }
   .brand h1 { margin: 0; font-size: 30px; font-weight: 700; }
   .brand .tag {
     font-family: 'Fraunces', Georgia, serif;
@@ -227,6 +233,20 @@
   .intro p { color: var(--ink-soft); font-size: 13.5px; line-height: 1.5; margin: 0; }
   .intro p + p { margin-top: 5px; }
   .intro em { font-family: 'Fraunces', Georgia, serif; font-style: italic; color: var(--ink); font-weight: 500; }
+  .intro-lead {
+    font-family: 'Fraunces', Georgia, serif;
+    font-style: italic;
+    font-weight: 500;
+    font-size: 23px;
+    line-height: 1.35;
+    color: var(--ink);
+    letter-spacing: -0.005em;
+    text-wrap: balance;
+    margin-bottom: var(--sp-3) !important;
+  }
+  @media (max-width: 480px) {
+    .intro-lead { font-size: 19px; }
+  }
 
   /* ---------- quick nav ---------- */
   .quick-nav { display: flex; gap: 8px; overflow-x: auto; margin: 0 0 var(--sp-6); padding: 2px 2px 6px; scrollbar-width: none; }
@@ -524,10 +544,11 @@
   .hint-link { color: var(--accent-strong); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
 
   .delivery-zone {
-    background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg);
-    padding: var(--sp-5) var(--sp-6); margin: 0 0 var(--sp-6); box-shadow: var(--shadow-sm);
+    background: transparent; border: none; border-radius: 0;
+    border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink);
+    padding: var(--sp-5) 0; margin: 0 0 var(--sp-6); box-shadow: none;
     display: flex; flex-direction: column; gap: var(--sp-3);
-    width: fit-content; max-width: 100%;
+    width: 100%; max-width: 100%;
   }
   .delivery-zone-head { display: flex; align-items: center; gap: 9px; }
   .delivery-zone-head svg { width: 19px; height: 19px; color: var(--accent); flex: none; }
@@ -748,7 +769,13 @@
 <header class="top">
   <div class="top-inner">
     <div class="brand">
-      <h1 class="display">Off Your Plate</h1>
+      <div class="brand-row">
+        <svg class="brand-mark" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+          <circle cx="50" cy="50" r="50" fill="var(--gold)"/>
+          <path d="M20 52 L41 74 Q60 62 82 26" fill="none" stroke="var(--ink)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <h1 class="display">Off Your Plate</h1>
+      </div>
       <span class="tag">Real food. Zero effort.</span>
     </div>
   </div>
@@ -801,7 +828,7 @@
 <div class="app">
   <main>
     <div class="intro">
-      <p>A home-cooked menu that rotates every three weeks, so there's always something new on your plate.</p>
+      <p class="intro-lead">A home-cooked menu that rotates every three weeks, so there's always something new on your plate.</p>
       <p>Some of these are recipes I've tested and perfected myself — others are Marmee's (my mum — we've called her that since reading <em>Little Women</em> together as kids), passed down and still made her way.</p>
       <p>Growing up in her kitchen, delicious home cooking became a huge part of my childhood — and it's still something I'm passionate about. These days everyone's busier than they used to be, but you still deserve a proper meal.</p>
     </div>
