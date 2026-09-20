@@ -1165,7 +1165,7 @@
   // real new Date()) once it's fine for the menu to start rotating for
   // real — no need to touch DISH_ROTATION_PAUSED_AT, it's only read while
   // paused. That's the "start the clock" switch for the dish lineup.
-  var DISH_ROTATION_PAUSED = true;
+  var DISH_ROTATION_PAUSED = false;
   var DISH_ROTATION_PAUSED_AT = new Date(2026, 8, 3, 9, 0); // Thu 3 Sep 2026, 9am — when this was paused
 
   var TIERS = buildTiers(TIER_SOURCE, DISH_ROTATION_PAUSED ? new Date(DISH_ROTATION_PAUSED_AT) : new Date());
