@@ -321,30 +321,35 @@
   .card .bulk-hint { font-size: 11.5px; color: var(--tier-color); opacity: 0.85; }
   .card .bulk-hint.is-active { opacity: 1; font-weight: 600; }
 
-  /* ---------- nutrition (macros) ---------- */
-  .nutri { margin-top: 4px; padding-top: 9px; border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: 6px; }
-  .nutri-toggle { display: flex; gap: 6px; }
+  /* ---------- nutrition (macros) ----------
+     Deliberately understated: this sits at the very bottom of the card,
+     below the price/stepper and the window/add-on toggles, as a small
+     footnote rather than a competing block — the ordering controls above
+     it are what a customer actually needs to act on. */
+  .nutri { margin-top: 2px; padding-top: 7px; border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: 3px; }
+  .nutri-note { font-size: 10px; font-style: italic; color: var(--ink-faint); }
+  .nutri-toggle { display: flex; gap: 4px; }
   .nutri-toggle button {
     flex: 1; border: 1px solid var(--line); background: var(--surface-sunken); color: var(--ink-soft);
-    border-radius: var(--r-sm); padding: 5px 8px; font-size: 11.5px; font-weight: 700; cursor: pointer; font-family: inherit;
+    border-radius: var(--r-sm); padding: 2px 6px; font-size: 9.5px; font-weight: 700; cursor: pointer; font-family: inherit;
     transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
   }
   .nutri-toggle button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-  .nutri-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-  .nutri-stat { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 5px 2px; background: var(--surface-sunken); border-radius: var(--r-sm); }
-  .nutri-stat .nv { font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; font-weight: 700; font-size: 13.5px; color: var(--ink); }
-  .nutri-stat .nl { font-size: 9.5px; letter-spacing: .03em; text-transform: uppercase; color: var(--ink-faint); }
+  .nutri-row { display: flex; flex-wrap: wrap; gap: 3px 11px; }
+  .nutri-stat { display: inline-flex; flex-direction: row; align-items: baseline; gap: 3px; padding: 0; background: none; border-radius: 0; }
+  .nutri-stat .nv { font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; font-weight: 700; font-size: 10.5px; color: var(--ink-soft); }
+  .nutri-stat .nl { font-size: 8.5px; letter-spacing: .02em; text-transform: uppercase; color: var(--ink-faint); }
   .nutri-delta {
-    display: none; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; width: fit-content;
-    color: var(--accent-strong); background: var(--accent-soft); border-radius: var(--r-pill); padding: 3px 10px;
+    display: none; align-items: center; gap: 4px; font-size: 9.5px; font-weight: 700; width: fit-content;
+    color: var(--accent-strong); background: var(--accent-soft); border-radius: var(--r-pill); padding: 2px 8px;
   }
   .nutri-delta.visible { display: inline-flex; }
-  .nutri-details { font-size: 12px; }
-  .nutri-details summary { cursor: pointer; color: var(--ink-soft); font-weight: 600; }
-  .nutri-details-body { display: flex; flex-wrap: wrap; gap: 3px var(--sp-4); margin-top: 6px; }
+  .nutri-details { font-size: 10px; }
+  .nutri-details summary { cursor: pointer; color: var(--ink-faint); font-weight: 600; }
+  .nutri-details-body { display: flex; flex-wrap: wrap; gap: 2px var(--sp-3); margin-top: 4px; }
   .nutri-details-body .nl { color: var(--ink-faint); }
   .nutri-details-body .nv { font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; color: var(--ink-soft); font-weight: 600; }
-  .nutri-disclaimer { font-size: 10.5px; color: var(--ink-faint); line-height: 1.4; margin-top: 6px; }
+  .nutri-disclaimer { font-size: 9px; color: var(--ink-faint); line-height: 1.35; margin-top: 4px; }
 
   /* "See photo" — only on a dish that actually has a `photo` set (see
      renderTiers()), sitting in the same top-right corner the old price-
@@ -1139,8 +1144,8 @@
   // yet — it hasn't been through the audit — so its card quietly shows no
   // macros rather than guessed ones; add it here once that's done.
   var NUTRITION = {
-    "breakfast-egg-muffins": { standard: { kcal: 316, protein_g: 23, carb_g: 4, fat_g: 23, fiber_g: 0, sugar_g: 2, sodium_mg: 635 } },
-    "breakfast-lemon-blueberry-pancakes": { standard: { kcal: 144, protein_g: 5, carb_g: 17, fat_g: 6, fiber_g: 1, sugar_g: 5, sodium_mg: 231 } },
+    "breakfast-egg-muffins": { standard: { kcal: 316, protein_g: 23, carb_g: 4, fat_g: 23, fiber_g: 0, sugar_g: 2, sodium_mg: 635 }, note: "Per 3 muffin cups (a standard serving)" },
+    "breakfast-lemon-blueberry-pancakes": { standard: { kcal: 144, protein_g: 5, carb_g: 17, fat_g: 6, fiber_g: 1, sugar_g: 5, sodium_mg: 231 }, note: "Per pancake" },
     "veg-tomato-soup": { standard: { kcal: 272, protein_g: 7, carb_g: 36, fat_g: 13, fiber_g: 7, sugar_g: 17, sodium_mg: 390 } },
     "veg-enchilada-bake": { standard: { kcal: 345, protein_g: 14, carb_g: 50, fat_g: 12, fiber_g: 10, sugar_g: 9, sodium_mg: 1160 } },
     "veg-feta-orzo": { standard: { kcal: 534, protein_g: 20, carb_g: 62, fat_g: 24, fiber_g: 9, sugar_g: 11, sodium_mg: 1460 } },
@@ -1163,24 +1168,23 @@
     "beef-barley-soup": { standard: { kcal: 332, protein_g: 33, carb_g: 32, fat_g: 8, fiber_g: 7, sugar_g: 7, sodium_mg: 1130 } },
     "beef-pita-pockets": { standard: { kcal: 430, protein_g: 37, carb_g: 40, fat_g: 13, fiber_g: 2, sugar_g: 4, sodium_mg: 714 } },
     "beef-ragu-cauliflower": { standard: { kcal: 451, protein_g: 38, carb_g: 36, fat_g: 17, fiber_g: 11, sugar_g: 16, sodium_mg: 701 } },
-    "sweet-banana-bread": { standard: { kcal: 200, protein_g: 4, carb_g: 32, fat_g: 6, fiber_g: 1, sugar_g: 14, sodium_mg: 280 } },
-    "sweet-cc-cookies": { standard: { kcal: 147, protein_g: 2, carb_g: 19, fat_g: 8, fiber_g: 1, sugar_g: 12, sodium_mg: 96 } },
-    "sweet-pb-cookies": { standard: { kcal: 184, protein_g: 3, carb_g: 24, fat_g: 9, fiber_g: 1, sugar_g: 15, sodium_mg: 169 } },
-    "sweet-snickerdoodles": { standard: { kcal: 144, protein_g: 2, carb_g: 22, fat_g: 6, fiber_g: 0, sugar_g: 12, sodium_mg: 95 } },
-    "snack-banana-oat-cookies": { standard: { kcal: 59, protein_g: 1, carb_g: 12, fat_g: 1, fiber_g: 1, sugar_g: 4, sodium_mg: 70 } },
-    "snack-oat-nut-bars": { standard: { kcal: 265, protein_g: 8, carb_g: 23, fat_g: 17, fiber_g: 4, sugar_g: 9, sodium_mg: 151 } },
-    "snack-flatbread": { standard: { kcal: 300, protein_g: 13, carb_g: 36, fat_g: 11, fiber_g: 1, sugar_g: 3, sodium_mg: 552 } }
+    "sweet-banana-bread": { standard: { kcal: 200, protein_g: 4, carb_g: 32, fat_g: 6, fiber_g: 1, sugar_g: 14, sodium_mg: 280 }, note: "Per slice (a loaf cuts into about 10)" },
+    "sweet-cc-cookies": { standard: { kcal: 147, protein_g: 2, carb_g: 19, fat_g: 8, fiber_g: 1, sugar_g: 12, sodium_mg: 96 }, note: "Per cookie" },
+    "sweet-pb-cookies": { standard: { kcal: 184, protein_g: 3, carb_g: 24, fat_g: 9, fiber_g: 1, sugar_g: 15, sodium_mg: 169 }, note: "Per cookie" },
+    "sweet-snickerdoodles": { standard: { kcal: 144, protein_g: 2, carb_g: 22, fat_g: 6, fiber_g: 0, sugar_g: 12, sodium_mg: 95 }, note: "Per cookie" },
+    "snack-banana-oat-cookies": { standard: { kcal: 59, protein_g: 1, carb_g: 12, fat_g: 1, fiber_g: 1, sugar_g: 4, sodium_mg: 70 }, note: "Per cookie" },
+    "snack-oat-nut-bars": { standard: { kcal: 265, protein_g: 8, carb_g: 23, fat_g: 17, fiber_g: 4, sugar_g: 9, sodium_mg: 151 }, note: "Per bar" },
+    "snack-flatbread": { standard: { kcal: 300, protein_g: 13, carb_g: 36, fat_g: 11, fiber_g: 1, sugar_g: 3, sodium_mg: 552 }, note: "Per flatbread (order is 2)" }
   };
 
   // Fixed reference point the rotation count is measured from — a starting
   // line, not a commitment to any real go-live date. Every
   // ROTATION_PERIOD_DAYS that pass since this date bump the rotation on by
-  // one step. Set to the Monday of the current week so the original,
-  // already-tested dishes are the ones showing during setup/preview; once
-  // an actual go-live date is picked (see MENU_LIVE_FROM below), it's worth
-  // sanity-checking which pair this epoch puts live on that date and
-  // nudging it (by whole ROTATION_PERIOD_DAYS increments, to keep both
-  // dishes in a tier changing together) if it doesn't line up.
+  // one step. This is the one date that ever needs hand-adjusting: nudge it
+  // (by whole ROTATION_PERIOD_DAYS increments, so both dishes in a tier
+  // keep changing together) if a real-world flip date needs to move —
+  // order windows and dish lineups both take their rotation period from
+  // this same epoch, so they always stay in lockstep automatically.
   var ROTATION_EPOCH = new Date(2026, 8, 3); // Thu 3 Sep 2026 — puts the next dish-rotation flip on Thu 24 Sep 2026
   var ROTATION_PERIOD_DAYS = 21; // three weeks
   // ROTATION_EPOCH always lands at midnight on a Thursday, so every 21-day
@@ -1195,9 +1199,24 @@
   // moment that last cutoff closes, instead of waiting for the date to turn
   // over — there's no longer a gap where nothing is orderable.
   var ROTATION_FLIP_LEAD_MS = 31 * 60 * 60 * 1000; // Tue 5pm -> Thu 00:00
+  // The "- 1" here matters: a Thu–Sun window's cutoff is always exactly 31
+  // hours before its delivery start, which is the SAME 31-hour lead used
+  // above — so every 21-day boundary, the very first Thu–Sun window of the
+  // new rotation has a cutoff that lands bit-for-bit on the flip instant
+  // itself. Without the "- 1", that one window's cutoff would evaluate to
+  // the NEW period while every moment leading up to it still reads as the
+  // OLD period (today hasn't flipped yet) — so it would never match
+  // finalizeWindows()'s "cutoff's period === today's period" check at any
+  // instant: not before the flip (period mismatch) and not after (already
+  // expired). It would quietly never be orderable, every single rotation.
+  // Subtracting 1ms before flooring makes an exact-boundary instant count
+  // as the tail end of the OLD period instead — so that window stays live,
+  // like any other, right up to and including the moment it closes, and
+  // the new period cleanly begins 1ms later. Nothing else about the flip
+  // timing changes.
   function rotationIndex(date) {
-    var days = Math.floor((date.getTime() + ROTATION_FLIP_LEAD_MS - ROTATION_EPOCH.getTime()) / 86400000);
-    return Math.floor(days / ROTATION_PERIOD_DAYS);
+    var ms = date.getTime() + ROTATION_FLIP_LEAD_MS - ROTATION_EPOCH.getTime();
+    return Math.floor((ms - 1) / (ROTATION_PERIOD_DAYS * 86400000));
   }
   // Picks `count` dishes out of `pool` for the given rotation-period index.
   // Once a pool has more dishes than there are slots, this cycles through
@@ -1528,19 +1547,23 @@
     return (tier === "extended" && !wantsCollection) ? "Delivery (extended zone)" : "Collection fee";
   }
 
-  // Set this once this specific menu is actually shared with families — the
-  // Monday its first Mon-Wed delivery window begins. Example:
-  //   var MENU_LIVE_FROM = new Date(2026, 8, 7); // Mon 7 Sep 2026 (month is 0-indexed, so 8 = September)
-  // While it's null (as now, during setup), ordering windows keep rolling
-  // forward relative to today, same as before — nothing changes. Once set,
-  // ordering is pinned to that one three-week rotation: as each window's
-  // cutoff passes it simply drops off the list rather than being replaced
-  // by a new one, and once all six are gone the page shows a "closed"
-  // state — so this menu can
-  // never quietly keep taking orders into a week it was never meant to
-  // cover. Set it back to null (and update TIERS) when the next rotation's
-  // menu is ready to go live.
-  var MENU_LIVE_FROM = new Date(2026, 8, 14); // Mon 14 Sep 2026 — 3-week block runs Sep 14 through Oct 4, with Mon 28–Wed 30 Sep as its last Mon–Wed window
+  // Order windows used to be pinned to a fixed three-week block starting
+  // from a hand-set "MENU_LIVE_FROM" go-live Monday: as each of that
+  // block's six windows expired it simply dropped off with no replacement,
+  // and once all six were gone the page showed a "closed" state — which
+  // meant *someone* had to remember to hand-pick a new anchor date every
+  // single rotation, or the site would eventually run dry and show nothing
+  // orderable at all. That's what happened here: this menu's block only
+  // ever covered Sep 14 – Oct 4, and once today moved past most of those
+  // cutoffs, only the block's last one or two windows were left to show.
+  // Removed in favour of just letting computeWindows() roll forward
+  // forever, the same way it always did before a go-live date was ever
+  // set. That's safe now in a way it wasn't during initial setup:
+  // finalizeWindows() already refuses to show a window whose cutoff
+  // belongs to a different rotation period than today's (see its comment
+  // below), so windows never drift ahead of whatever dishes are actually
+  // live — there's no longer a separate "pin it to this rotation" step
+  // that needs redoing by hand every three weeks.
 
   // Small, hand-drawn line icons per tier — inline so nothing external is
   // ever fetched (the artifact sandbox blocks hotlinked images anyway).
@@ -1645,16 +1668,18 @@
   // plus the following two weeks'. Both cutoffs sit a consistent ~31 hours
   // before their window opens (Saturday 5pm -> Monday; Tuesday 5pm ->
   // Thursday), giving a full shop-then-cook day of breathing room rather
-  // than the old same-day-ish squeeze. Two implementations:
-  // computeRollingWindows() (used while MENU_LIVE_FROM is null) always
-  // finds the next six relative to today, rolling forward forever — fine
-  // during setup, before this menu is actually live.
-  // computeFixedRotationWindows() (used once MENU_LIVE_FROM is set) pins
-  // the same six windows to that specific rotation instead: as each one's
-  // cutoff passes it falls away rather than being replaced, so the page can
-  // detect when the whole rotation is spent.
+  // than the old same-day-ish squeeze. This always finds the next six
+  // relative to today and just keeps rolling forward, forever — there used
+  // to be a second, "pin it to one fixed rotation" implementation of this
+  // for once the menu went properly live, but it required someone to
+  // hand-set a new anchor date every single rotation or the site would run
+  // out of windows and show "closed" (see the removed MENU_LIVE_FROM
+  // comment above for the full story of why that got retired). Rolling
+  // forever is safe on its own: finalizeWindows() below already refuses to
+  // show a window whose cutoff belongs to a different dish-rotation period
+  // than today's, so a window can never outrun what's actually on the menu.
   function computeWindows() {
-    return MENU_LIVE_FROM ? computeFixedRotationWindows(MENU_LIVE_FROM) : computeRollingWindows();
+    return computeRollingWindows();
   }
   function computeRollingWindows() {
     var sat0 = nextOccurrence(6, 17, 0), tue0 = nextOccurrence(2, 17, 0);
@@ -1666,28 +1691,6 @@
       { cutoff: addWeeks(sat0, 2), start: addDays(addWeeks(sat0, 2), 2), end: addDays(addWeeks(sat0, 2), 4), dayLabel: "Mon–Wed" },
       { cutoff: addWeeks(tue0, 2), start: addDays(addWeeks(tue0, 2), 2), end: addDays(addWeeks(tue0, 2), 5), dayLabel: "Thu–Sun" }
     ]);
-  }
-  function computeFixedRotationWindows(monday) {
-    var sat0 = new Date(monday); sat0.setDate(sat0.getDate() - 2); sat0.setHours(17, 0, 0, 0);
-    var tue0 = new Date(monday); tue0.setDate(tue0.getDate() + 1); tue0.setHours(17, 0, 0, 0);
-    var now = new Date();
-    // The 3-week ordering block always runs through week offsets 0, 1 and 2
-    // relative to the anchor Monday (that's what keeps, e.g., "Mon 28-30"
-    // as the fixed last Mon-Wed window). But when MENU_LIVE_FROM is set a
-    // few days out, the week just BEFORE the anchor can still have a window
-    // whose cutoff hasn't passed yet (e.g. anchor = Mon 14 Sep, "now" = Sun
-    // 6 Sep -> the Thu 10-13 Sep window, cutoff Tue 8 Sep, is still open).
-    // Skipping it would make a genuinely orderable current-menu window
-    // vanish from the site. Reach back as many whole weeks as it takes to
-    // cover from "now" up to the anchor — the cutoff-expiry filter below
-    // trims anything reached back to that's actually already closed.
-    var weeksBack = Math.max(0, Math.ceil((monday - now) / (7 * 86400000)));
-    var raw = [];
-    for (var wk = -weeksBack; wk <= 2; wk++) {
-      raw.push({ cutoff: addWeeks(sat0, wk), start: addDays(addWeeks(sat0, wk), 2), end: addDays(addWeeks(sat0, wk), 4), dayLabel: "Mon–Wed" });
-      raw.push({ cutoff: addWeeks(tue0, wk), start: addDays(addWeeks(tue0, wk), 2), end: addDays(addWeeks(tue0, wk), 5), dayLabel: "Thu–Sun" });
-    }
-    return finalizeWindows(raw.filter(function (w) { return w.cutoff > now; })); // expired windows fall away, no replacement
   }
   function finalizeWindows(raw) {
     // Never offer a window whose CUTOFF falls in a different dish-rotation
@@ -2275,6 +2278,20 @@
     var hasLighter = !!info.lighter;
     var current = hasLighter ? (state.nutriVariant[dish.id] || "standard") : "standard";
 
+    // Most dishes are sold and eaten as "1 portion", which the unit-meta
+    // line above already says — no need to repeat it here. But a handful
+    // are sold by the dozen/loaf/batch while these figures are necessarily
+    // for a single piece of it (you can't average nutrition over "a
+    // dozen"), so those carry a `note` in NUTRITION saying exactly what one
+    // of these figures is for — e.g. "Per cookie" on a dish sold "per
+    // dozen" — so the numbers below are never mistaken for the whole order.
+    if (info.note) {
+      var note = document.createElement("div");
+      note.className = "nutri-note";
+      note.textContent = info.note;
+      wrap.appendChild(note);
+    }
+
     var toggle = null;
     if (hasLighter) {
       toggle = document.createElement("div");
@@ -2437,9 +2454,6 @@
           updateBulkHint(bulkHint, dish.id, dish, tier.price);
         }
 
-        var nutri = buildNutritionBlock(dish);
-        if (nutri) card.appendChild(nutri);
-
         var foot = document.createElement("div");
         foot.className = "card-foot";
         var priceTag = document.createElement("span");
@@ -2454,6 +2468,12 @@
 
         card.appendChild(windowToggle(dish.id, dish));
         if (dish.addOns && dish.addOns.length) card.appendChild(addonToggle(dish.id, dish));
+
+        // Nutrition goes last, below everything a customer actually acts on
+        // (price, add-to-cart stepper, window/add-on choices) — a quiet
+        // footnote at the very bottom of the card, not a competing block.
+        var nutri = buildNutritionBlock(dish);
+        if (nutri) card.appendChild(nutri);
 
         row.appendChild(card);
       });
@@ -3477,10 +3497,11 @@
     document.fonts.ready.then(function () { updatePromoOffset(); buildPromoTrack(); });
   }
 
-  // Shown once MENU_LIVE_FROM is set and every window in this rotation has
-  // fallen away (its cutoff has passed) — rather than the page quietly
-  // continuing to sell this rotation's dishes for a week they were never
-  // priced or planned for.
+  // A safety net, not something that should ever trigger in normal use now
+  // that computeWindows() rolls forward forever: shown only if something
+  // genuinely leaves zero windows on the table (e.g. every window computed
+  // happens to fall right at a rotation boundary), rather than the page
+  // silently rendering an order form with nothing orderable in it.
   function renderClosedState() {
     document.getElementById("cutoffs").innerHTML = "";
     document.getElementById("quickNav").style.display = "none";
@@ -3496,7 +3517,7 @@
 
   // ---------------- init ----------------
   WINDOWS = computeWindows();
-  if (MENU_LIVE_FROM && !WINDOWS.list.length) {
+  if (!WINDOWS.list.length) {
     renderClosedState();
   } else {
     renderCutoffs();
