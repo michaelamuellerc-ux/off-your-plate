@@ -321,6 +321,31 @@
   .card .bulk-hint { font-size: 11.5px; color: var(--tier-color); opacity: 0.85; }
   .card .bulk-hint.is-active { opacity: 1; font-weight: 600; }
 
+  /* ---------- nutrition (macros) ---------- */
+  .nutri { margin-top: 4px; padding-top: 9px; border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: 6px; }
+  .nutri-toggle { display: flex; gap: 6px; }
+  .nutri-toggle button {
+    flex: 1; border: 1px solid var(--line); background: var(--surface-sunken); color: var(--ink-soft);
+    border-radius: var(--r-sm); padding: 5px 8px; font-size: 11.5px; font-weight: 700; cursor: pointer; font-family: inherit;
+    transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+  }
+  .nutri-toggle button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .nutri-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .nutri-stat { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 5px 2px; background: var(--surface-sunken); border-radius: var(--r-sm); }
+  .nutri-stat .nv { font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; font-weight: 700; font-size: 13.5px; color: var(--ink); }
+  .nutri-stat .nl { font-size: 9.5px; letter-spacing: .03em; text-transform: uppercase; color: var(--ink-faint); }
+  .nutri-delta {
+    display: none; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; width: fit-content;
+    color: var(--accent-strong); background: var(--accent-soft); border-radius: var(--r-pill); padding: 3px 10px;
+  }
+  .nutri-delta.visible { display: inline-flex; }
+  .nutri-details { font-size: 12px; }
+  .nutri-details summary { cursor: pointer; color: var(--ink-soft); font-weight: 600; }
+  .nutri-details-body { display: flex; flex-wrap: wrap; gap: 3px var(--sp-4); margin-top: 6px; }
+  .nutri-details-body .nl { color: var(--ink-faint); }
+  .nutri-details-body .nv { font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; color: var(--ink-soft); font-weight: 600; }
+  .nutri-disclaimer { font-size: 10.5px; color: var(--ink-faint); line-height: 1.4; margin-top: 6px; }
+
   /* "See photo" — only on a dish that actually has a `photo` set (see
      renderTiers()), sitting in the same top-right corner the old price-
      premium badge used to occupy. */
@@ -1102,6 +1127,51 @@
     }
   ];
 
+  // Per-portion macro figures from Michaela's audited nutrition workbook —
+  // whole numbers throughout (the menu has never shown a fractional gram).
+  // Keyed by dish id rather than folded onto TIER_SOURCE itself, so this
+  // can be regenerated wholesale from the audit without touching the menu
+  // data above it. A dish only carries a `lighter` entry (plus
+  // `headlineMetric`/`headlineLabel`, used for the "X% less ___" badge)
+  // when it genuinely has a lighter version on offer — right now that's
+  // just the three dishes below; buildNutritionBlock() only draws the
+  // Standard/Lighter toggle for those. breakfast-kefir-chia has no entry
+  // yet — it hasn't been through the audit — so its card quietly shows no
+  // macros rather than guessed ones; add it here once that's done.
+  var NUTRITION = {
+    "breakfast-egg-muffins": { standard: { kcal: 316, protein_g: 23, carb_g: 4, fat_g: 23, fiber_g: 0, sugar_g: 2, sodium_mg: 635 } },
+    "breakfast-lemon-blueberry-pancakes": { standard: { kcal: 144, protein_g: 5, carb_g: 17, fat_g: 6, fiber_g: 1, sugar_g: 5, sodium_mg: 231 } },
+    "veg-tomato-soup": { standard: { kcal: 272, protein_g: 7, carb_g: 36, fat_g: 13, fiber_g: 7, sugar_g: 17, sodium_mg: 390 } },
+    "veg-enchilada-bake": { standard: { kcal: 345, protein_g: 14, carb_g: 50, fat_g: 12, fiber_g: 10, sugar_g: 9, sodium_mg: 1160 } },
+    "veg-feta-orzo": { standard: { kcal: 534, protein_g: 20, carb_g: 62, fat_g: 24, fiber_g: 9, sugar_g: 11, sodium_mg: 1460 } },
+    "veg-fried-rice": { standard: { kcal: 161, protein_g: 4, carb_g: 24, fat_g: 5, fiber_g: 1, sugar_g: 2, sodium_mg: 189 } },
+    "veg-lentil-dahl": { standard: { kcal: 483, protein_g: 19, carb_g: 56, fat_g: 23, fiber_g: 10, sugar_g: 12, sodium_mg: 1331 } },
+    "veg-shepherds-pie": { standard: { kcal: 320, protein_g: 11, carb_g: 47, fat_g: 11, fiber_g: 9, sugar_g: 8, sodium_mg: 558 } },
+    "chi-butter": { standard: { kcal: 590, protein_g: 46, carb_g: 14, fat_g: 41, fiber_g: 3, sugar_g: 6, sodium_mg: 1020 }, lighter: { kcal: 466, protein_g: 47, carb_g: 14, fat_g: 26, fiber_g: 3, sugar_g: 7, sodium_mg: 978 }, headlineMetric: "fat_g", headlineLabel: "fat" },
+    "chi-potatoes": { standard: { kcal: 584, protein_g: 40, carb_g: 42, fat_g: 30, fiber_g: 7, sugar_g: 4, sodium_mg: 1271 } },
+    "chi-baked-rice": { standard: { kcal: 611, protein_g: 46, carb_g: 44, fat_g: 27, fiber_g: 2, sugar_g: 2, sodium_mg: 956 } },
+    "chi-white-chili": { standard: { kcal: 460, protein_g: 37, carb_g: 41, fat_g: 17, fiber_g: 12, sugar_g: 2, sodium_mg: 1589 } },
+    "chi-honey-garlic": { standard: { kcal: 310, protein_g: 28, carb_g: 27, fat_g: 11, fiber_g: 2, sugar_g: 20, sodium_mg: 701 }, lighter: { kcal: 277, protein_g: 28, carb_g: 18, fat_g: 11, fiber_g: 2, sugar_g: 11, sodium_mg: 717 }, headlineMetric: "sugar_g", headlineLabel: "sugar" },
+    "chi-lemon-orzo": { standard: { kcal: 607, protein_g: 42, carb_g: 57, fat_g: 24, fiber_g: 3, sugar_g: 3, sodium_mg: 1429 } },
+    "chi-fajitas": { standard: { kcal: 483, protein_g: 30, carb_g: 42, fat_g: 23, fiber_g: 5, sugar_g: 7, sodium_mg: 875 } },
+    "chi-moroccan-couscous": { standard: { kcal: 626, protein_g: 46, carb_g: 69, fat_g: 20, fiber_g: 11, sugar_g: 14, sodium_mg: 1060 } },
+    "beef-chile": { standard: { kcal: 290, protein_g: 25, carb_g: 36, fat_g: 5, fiber_g: 9, sugar_g: 15, sodium_mg: 677 } },
+    "beef-stew": { standard: { kcal: 573, protein_g: 65, carb_g: 29, fat_g: 22, fiber_g: 4, sugar_g: 6, sodium_mg: 742 } },
+    "beef-pasta-bake": { standard: { kcal: 506, protein_g: 37, carb_g: 61, fat_g: 13, fiber_g: 6, sugar_g: 9, sodium_mg: 1027 } },
+    "beef-mongolian": { standard: { kcal: 211, protein_g: 22, carb_g: 20, fat_g: 5, fiber_g: 2, sugar_g: 15, sodium_mg: 645 } },
+    "beef-moroccan-meatballs": { standard: { kcal: 329, protein_g: 28, carb_g: 18, fat_g: 17, fiber_g: 5, sugar_g: 9, sodium_mg: 1547 }, lighter: { kcal: 283, protein_g: 28, carb_g: 18, fat_g: 12, fiber_g: 5, sugar_g: 9, sodium_mg: 1111 }, headlineMetric: "sodium_mg", headlineLabel: "sodium" },
+    "beef-barley-soup": { standard: { kcal: 332, protein_g: 33, carb_g: 32, fat_g: 8, fiber_g: 7, sugar_g: 7, sodium_mg: 1130 } },
+    "beef-pita-pockets": { standard: { kcal: 430, protein_g: 37, carb_g: 40, fat_g: 13, fiber_g: 2, sugar_g: 4, sodium_mg: 714 } },
+    "beef-ragu-cauliflower": { standard: { kcal: 451, protein_g: 38, carb_g: 36, fat_g: 17, fiber_g: 11, sugar_g: 16, sodium_mg: 701 } },
+    "sweet-banana-bread": { standard: { kcal: 200, protein_g: 4, carb_g: 32, fat_g: 6, fiber_g: 1, sugar_g: 14, sodium_mg: 280 } },
+    "sweet-cc-cookies": { standard: { kcal: 147, protein_g: 2, carb_g: 19, fat_g: 8, fiber_g: 1, sugar_g: 12, sodium_mg: 96 } },
+    "sweet-pb-cookies": { standard: { kcal: 184, protein_g: 3, carb_g: 24, fat_g: 9, fiber_g: 1, sugar_g: 15, sodium_mg: 169 } },
+    "sweet-snickerdoodles": { standard: { kcal: 144, protein_g: 2, carb_g: 22, fat_g: 6, fiber_g: 0, sugar_g: 12, sodium_mg: 95 } },
+    "snack-banana-oat-cookies": { standard: { kcal: 59, protein_g: 1, carb_g: 12, fat_g: 1, fiber_g: 1, sugar_g: 4, sodium_mg: 70 } },
+    "snack-oat-nut-bars": { standard: { kcal: 265, protein_g: 8, carb_g: 23, fat_g: 17, fiber_g: 4, sugar_g: 9, sodium_mg: 151 } },
+    "snack-flatbread": { standard: { kcal: 300, protein_g: 13, carb_g: 36, fat_g: 11, fiber_g: 1, sugar_g: 3, sodium_mg: 552 } }
+  };
+
   // Fixed reference point the rotation count is measured from — a starting
   // line, not a commitment to any real go-live date. Every
   // ROTATION_PERIOD_DAYS that pass since this date bump the rotation on by
@@ -1476,7 +1546,7 @@
   var reduceMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 
   // ---------------- state ----------------
-  var state = { qty: {}, window: {}, addOns: {}, size: {}, variant: {}, batch: {} }; // addOns: dishId -> { addOnId: true/false }; size: dishId -> sizeId (for dishes with a `sizes` list, e.g. loaf sizes); variant/batch: dishId -> id (for dishes priced on two independent choices, e.g. the egg muffin cups)
+  var state = { qty: {}, window: {}, addOns: {}, size: {}, variant: {}, batch: {}, nutriVariant: {} }; // addOns: dishId -> { addOnId: true/false }; size: dishId -> sizeId (for dishes with a `sizes` list, e.g. loaf sizes); variant/batch: dishId -> id (for dishes priced on two independent choices, e.g. the egg muffin cups); nutriVariant: dishId -> "standard"/"lighter", which macro set a dish's card is currently showing (see buildNutritionBlock)
   var WINDOWS = null; // computed once at init — see computeWindows()
   var justSent = false; // true right after resetOrderAfterSend() clears the cart — see renderOrder()
   // true when an extended-zone customer has chosen to collect instead of
@@ -2118,6 +2188,124 @@
     return s;
   }
 
+  // ---------------- nutrition (macros) ----------------
+  // Calories/protein/carbs/fat sit always-visible on every card that has
+  // audited data (see NUTRITION above) — the four numbers a weight-loss-
+  // and-training customer actually scans for first. Fiber/sugar/sodium sit
+  // one tap away behind "Full nutrition", so the card stays scannable for
+  // everyone else. A dish with a lighter version gets a Standard/Lighter
+  // toggle above the numbers; picking Lighter swaps every value together
+  // and shows a computed "X% less ___" badge against that dish's one
+  // headline metric (see NUTRITION's headlineMetric/headlineLabel) — never
+  // rebuilding the card, just repainting its own text nodes, so nothing
+  // else about the card (an open disclosure, a scroll position) resets.
+  var PRIMARY_STATS = [
+    { key: "kcal", label: "Cal" },
+    { key: "protein_g", label: "Protein" },
+    { key: "carb_g", label: "Carbs" },
+    { key: "fat_g", label: "Fat" }
+  ];
+  var SECONDARY_STATS = [
+    { key: "fiber_g", label: "Fiber" },
+    { key: "sugar_g", label: "Sugar" },
+    { key: "sodium_mg", label: "Sodium" }
+  ];
+  function macroUnit(key) { return key === "sodium_mg" ? "mg" : (key === "kcal" ? "" : "g"); }
+
+  function buildNutritionBlock(dish) {
+    var info = NUTRITION[dish.id];
+    if (!info) return null; // no audited data for this dish yet — show nothing rather than guess
+
+    var wrap = document.createElement("div");
+    wrap.className = "nutri";
+    var hasLighter = !!info.lighter;
+    var current = hasLighter ? (state.nutriVariant[dish.id] || "standard") : "standard";
+
+    var toggle = null;
+    if (hasLighter) {
+      toggle = document.createElement("div");
+      toggle.className = "nutri-toggle";
+      wrap.appendChild(toggle);
+    }
+
+    var row = document.createElement("div");
+    row.className = "nutri-row";
+    wrap.appendChild(row);
+    var primaryEls = {};
+    PRIMARY_STATS.forEach(function (s) {
+      var cell = document.createElement("div");
+      cell.className = "nutri-stat";
+      var nv = document.createElement("span"); nv.className = "nv";
+      var nl = document.createElement("span"); nl.className = "nl"; nl.textContent = s.label;
+      cell.appendChild(nv); cell.appendChild(nl);
+      row.appendChild(cell);
+      primaryEls[s.key] = nv;
+    });
+
+    var delta = document.createElement("span");
+    delta.className = "nutri-delta";
+    wrap.appendChild(delta);
+
+    var details = document.createElement("details");
+    details.className = "nutri-details";
+    var summary = document.createElement("summary");
+    summary.textContent = "Full nutrition";
+    details.appendChild(summary);
+    var body = document.createElement("div");
+    body.className = "nutri-details-body";
+    var secondaryEls = {};
+    SECONDARY_STATS.forEach(function (s) {
+      var stat = document.createElement("span");
+      var nl = document.createElement("span"); nl.className = "nl"; nl.textContent = s.label + " ";
+      var nv = document.createElement("span"); nv.className = "nv";
+      stat.appendChild(nl); stat.appendChild(nv);
+      body.appendChild(stat);
+      secondaryEls[s.key] = nv;
+    });
+    details.appendChild(body);
+    var disclaimer = document.createElement("div");
+    disclaimer.className = "nutri-disclaimer";
+    disclaimer.textContent = "Per portion, based on our standard recipe. \"Or\" ingredient swaps and optional add-ons aren't reflected here.";
+    details.appendChild(disclaimer);
+    wrap.appendChild(details);
+
+    function paint(which) {
+      var vals = info[which];
+      PRIMARY_STATS.forEach(function (s) { primaryEls[s.key].textContent = vals[s.key] + macroUnit(s.key); });
+      SECONDARY_STATS.forEach(function (s) { secondaryEls[s.key].textContent = vals[s.key] + macroUnit(s.key); });
+      if (hasLighter) {
+        var std = info.standard[info.headlineMetric];
+        var lgt = info.lighter[info.headlineMetric];
+        var pct = std > 0 ? Math.round((std - lgt) / std * 100) : 0;
+        if (which === "lighter" && pct > 0) {
+          delta.textContent = "↓ " + pct + "% " + info.headlineLabel + " vs. standard";
+          delta.classList.add("visible");
+        } else {
+          delta.classList.remove("visible");
+        }
+      }
+    }
+    paint(current);
+
+    if (toggle) {
+      ["standard", "lighter"].forEach(function (which) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.textContent = which === "standard" ? "Standard" : "Lighter";
+        b.setAttribute("aria-pressed", which === current ? "true" : "false");
+        b.addEventListener("click", function () {
+          state.nutriVariant[dish.id] = which;
+          toggle.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
+          b.setAttribute("aria-pressed", "true");
+          paint(which);
+        });
+        toggle.appendChild(b);
+      });
+    }
+
+    return wrap;
+  }
+
   function renderTiers() {
     var root = document.getElementById("tiers");
     root.innerHTML = "";
@@ -2193,6 +2381,9 @@
           card.appendChild(bulkHint);
           updateBulkHint(bulkHint, dish.id, dish, tier.price);
         }
+
+        var nutri = buildNutritionBlock(dish);
+        if (nutri) card.appendChild(nutri);
 
         var foot = document.createElement("div");
         foot.className = "card-foot";
