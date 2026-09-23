@@ -1075,7 +1075,7 @@
         { id: "chi-potatoes", name: "Creamy Chicken & Potatoes", blurb: "Chicken thighs and baby potatoes braised low and slow in a rich, creamy garlic sauce.", unitLabel: "1 portion", photo: "photos/chi-potatoes.jpg" },
         { id: "chi-baked-rice", name: "One-Dish Baked Chicken & Rice", blurb: "Chicken baked with rice and vegetables in a savoury stock until the rice underneath soaks up all the flavour and the top turns golden.", unitLabel: "1 portion" },
         { id: "chi-white-chili", name: "Crockpot White Chicken Chili", blurb: "Shredded chicken and white beans simmered in a mild green chili broth with cumin and oregano, finished creamy with cream cheese and fresh lime.", unitLabel: "1 portion" },
-        { id: "chi-honey-garlic", name: "Slow Cooker Honey Garlic Chicken", blurb: "Shredded chicken glazed in a sticky honey and garlic sauce with a gentle kick of chilli, piled over egg noodles — or rice, if you'd rather — to soak up every drop.", unitLabel: "1 portion", photo: "photos/chi-honey-garlic.jpg" },
+        { id: "chi-honey-garlic", name: "Slow Cooker Honey Garlic Chicken", blurb: "Shredded chicken glazed in a sticky honey and garlic sauce with a gentle kick of chilli, piled over egg noodles — or rice, if you'd rather — to soak up every drop.", unitLabel: "1 portion", photo: "photos/chi-honey-garlic.jpg", sideChoice: [ { id: "noodles", label: "Egg Noodles" }, { id: "rice", label: "Rice" } ] },
         { id: "chi-lemon-orzo", name: "One-Skillet Lemon Chicken Orzo", blurb: "Seared chicken thighs and orzo finished in a bright lemon and butter pan sauce, with black pepper and fresh herbs.", unitLabel: "1 portion" },
         { id: "chi-fajitas", name: "Sheet-Pan Chicken Fajitas", blurb: "Chicken and peppers roasted in smoky fajita spices until lightly charred at the edges, served with warm tortillas and lime.", unitLabel: "1 portion" },
         { id: "chi-moroccan-couscous", name: "One-Pot Moroccan-Spiced Chicken & Couscous", blurb: "Chicken thighs braised in warm Moroccan spices with tomatoes and chickpeas, served over couscous with fresh herbs and a squeeze of lemon.", unitLabel: "1 portion" }
@@ -1088,8 +1088,8 @@
       pool: [
         { id: "beef-stew", name: "Marmee's Irish Beef Stew", blurb: "Slow-braised beef with carrots and potatoes in a rich broth, deepened with a splash of red wine.", price: 13.00, unitLabel: "1 portion", addOns: [ { id: "bacon", label: "Smoked bacon", price: 1.00 } ] },
         { id: "beef-pasta-bake", name: "Baked Beef & Pasta Casserole", blurb: "A cheesy baked pasta with seasoned ground beef in a rich tomato sauce, finished with a golden, bubbling layer of melted cheese.", unitLabel: "1 portion", photo: "photos/beef-pasta-bake.jpg" },
-        { id: "beef-mongolian", name: "Mongolian Ground Beef", blurb: "Ground beef glazed in a sweet, savoury sauce of soy, garlic and ginger, finished with spring onion and sesame.", unitLabel: "1 portion" },
-        { id: "beef-moroccan-meatballs", name: "Moroccan Meatball Tagine", blurb: "Warmly spiced beef meatballs simmered gently in a fragrant tomato sauce with cinnamon, cumin and fresh herbs.", unitLabel: "1 portion" },
+        { id: "beef-mongolian", name: "Mongolian Ground Beef", blurb: "Ground beef glazed in a sweet, savoury sauce of soy, garlic and ginger, finished with spring onion and sesame. Served over your choice of rice or egg noodles.", unitLabel: "1 portion", sideChoice: [ { id: "rice", label: "Rice" }, { id: "noodles", label: "Egg Noodles" } ] },
+        { id: "beef-stroganoff", name: "One-Skillet Beef Stroganoff", blurb: "Ground beef and mushrooms in a rich, tangy sour cream sauce, with egg noodles simmered right in the pan.", unitLabel: "1 portion" },
         { id: "beef-barley-soup", name: "Crockpot Beef & Barley Soup", blurb: "Diced beef, pearl barley and root vegetables simmered together in a rich, hearty beef broth.", price: 13.00, unitLabel: "1 portion" },
         { id: "beef-pita-pockets", name: "Greek-Spiced Beef & Pita Pockets", blurb: "Ground beef seasoned with oregano, cumin and garlic, piled into warm pita with a cooling yogurt and cucumber sauce.", unitLabel: "1 portion" },
         { id: "beef-ragu-cauliflower", name: "Beef Ragu with Mashed Cauliflower", blurb: "Rich, slow-simmered beef ragu spooned over a creamy mashed cauliflower, finished with grated Parmesan.", unitLabel: "1 portion", photo: "photos/beef-ragu-cauliflower.jpg" }
@@ -1159,7 +1159,7 @@
     "beef-stew": { standard: { kcal: 573, protein_g: 65, carb_g: 29, fat_g: 22, fiber_g: 4, sugar_g: 6, sodium_mg: 742 } },
     "beef-pasta-bake": { standard: { kcal: 506, protein_g: 37, carb_g: 61, fat_g: 13, fiber_g: 6, sugar_g: 9, sodium_mg: 1027 } },
     "beef-mongolian": { standard: { kcal: 211, protein_g: 22, carb_g: 20, fat_g: 5, fiber_g: 2, sugar_g: 15, sodium_mg: 645 } },
-    "beef-moroccan-meatballs": { standard: { kcal: 335, protein_g: 28, carb_g: 17, fat_g: 18, fiber_g: 5, sugar_g: 9, sodium_mg: 1547 }, lighter: { kcal: 290, protein_g: 28, carb_g: 17, fat_g: 13, fiber_g: 5, sugar_g: 9, sodium_mg: 1111 }, headlineMetric: "sodium_mg", headlineLabel: "sodium" },
+    "beef-stroganoff": { standard: { kcal: 458, protein_g: 29, carb_g: 46, fat_g: 17, fiber_g: 3, sugar_g: 3, sodium_mg: 741 } },
     "beef-barley-soup": { standard: { kcal: 332, protein_g: 33, carb_g: 32, fat_g: 8, fiber_g: 7, sugar_g: 7, sodium_mg: 1130 } },
     "beef-pita-pockets": { standard: { kcal: 430, protein_g: 37, carb_g: 40, fat_g: 13, fiber_g: 2, sugar_g: 4, sodium_mg: 714 } },
     "beef-ragu-cauliflower": { standard: { kcal: 451, protein_g: 38, carb_g: 36, fat_g: 17, fiber_g: 11, sugar_g: 16, sodium_mg: 701 } },
@@ -1183,8 +1183,20 @@
   // dishes in a tier changing together) if it doesn't line up.
   var ROTATION_EPOCH = new Date(2026, 8, 3); // Thu 3 Sep 2026 — puts the next dish-rotation flip on Thu 24 Sep 2026
   var ROTATION_PERIOD_DAYS = 21; // three weeks
+  // ROTATION_EPOCH always lands at midnight on a Thursday, so every 21-day
+  // boundary it produces is also a Thursday 00:00 — but the LAST order
+  // window feeding the outgoing rotation actually closes 31 hours before
+  // that (Tuesday 5pm — see the "~31 hours" comment on the window-cutoff
+  // math below), and nothing is orderable in between: the old rotation's
+  // last cutoff has passed, but the calendar-day flip hasn't happened yet,
+  // so the site used to show "closed" for that whole gap. Shifting the
+  // instant rotationIndex() flips on, back by that same fixed 31-hour lead,
+  // means the new rotation's dishes AND its order windows both go live the
+  // moment that last cutoff closes, instead of waiting for the date to turn
+  // over — there's no longer a gap where nothing is orderable.
+  var ROTATION_FLIP_LEAD_MS = 31 * 60 * 60 * 1000; // Tue 5pm -> Thu 00:00
   function rotationIndex(date) {
-    var days = Math.floor((date - ROTATION_EPOCH) / 86400000);
+    var days = Math.floor((date.getTime() + ROTATION_FLIP_LEAD_MS - ROTATION_EPOCH.getTime()) / 86400000);
     return Math.floor(days / ROTATION_PERIOD_DAYS);
   }
   // Picks `count` dishes out of `pool` for the given rotation-period index.
@@ -1546,7 +1558,7 @@
   var reduceMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 
   // ---------------- state ----------------
-  var state = { qty: {}, window: {}, addOns: {}, size: {}, variant: {}, batch: {}, nutriVariant: {} }; // addOns: dishId -> { addOnId: true/false }; size: dishId -> sizeId (for dishes with a `sizes` list, e.g. loaf sizes); variant/batch: dishId -> id (for dishes priced on two independent choices, e.g. the egg muffin cups); nutriVariant: dishId -> "standard"/"lighter", which macro set a dish's card is currently showing (see buildNutritionBlock)
+  var state = { qty: {}, window: {}, addOns: {}, size: {}, variant: {}, batch: {}, nutriVariant: {}, sideChoice: {} }; // addOns: dishId -> { addOnId: true/false }; size: dishId -> sizeId (for dishes with a `sizes` list, e.g. loaf sizes); variant/batch: dishId -> id (for dishes priced on two independent choices, e.g. the egg muffin cups); nutriVariant: dishId -> "standard"/"lighter", which macro set a dish's card is currently showing (see buildNutritionBlock); sideChoice: dishId -> id (for a dish with a `sideChoice` list, e.g. rice vs egg noodles — a free choice with no price difference, unlike `sizes`)
   var WINDOWS = null; // computed once at init — see computeWindows()
   var justSent = false; // true right after resetOrderAfterSend() clears the cart — see renderOrder()
   // true when an extended-zone customer has chosen to collect instead of
@@ -1965,6 +1977,17 @@
   // both which flavour and how many change the price independently.
   function dishVariantId(dishId, dish) { return state.variant[dishId] || dish.variants[0].id; }
   function dishBatchId(dishId, dish) { return state.batch[dishId] || dish.batchSizes[0].id; }
+  // A `sideChoice` (e.g. rice vs egg noodles) is a free choice, not a
+  // pricing axis like `sizes`/`variants` — it never touches dishBasePrice —
+  // but it still needs to fold into the cart's line key (below) so a
+  // customer can order the same dish both ways in one go, and so the
+  // stepper/window-toggle for each version tracks its own quantity.
+  function dishSideChoiceId(dishId, dish) { return state.sideChoice[dishId] || dish.sideChoice[0].id; }
+  function sideChoiceLabelById(dish, choiceId) {
+    if (!dish.sideChoice) return null;
+    var match = dish.sideChoice.filter(function (c) { return c.id === choiceId; })[0];
+    return (match || dish.sideChoice[0]).label;
+  }
 
   // A dish with flavour/size options (egg muffin cups, flatbreads, banana
   // bread) can be added to the cart more than once with a DIFFERENT choice
@@ -1977,13 +2000,19 @@
   // choice back to one already in the cart picks that line back up (rather
   // than starting a new one) so +/- keep editing it.
   function dishLineKey(dishId, dish) {
+    var key = dishId;
     if (dish.variants && dish.batchSizes) {
-      return dishId + "::v=" + dishVariantId(dishId, dish) + "::b=" + dishBatchId(dishId, dish);
+      key = dishId + "::v=" + dishVariantId(dishId, dish) + "::b=" + dishBatchId(dishId, dish);
+    } else if (dish.sizes) {
+      key = dishId + "::s=" + (state.size[dishId] || dish.sizes[0].id);
     }
-    if (dish.sizes) {
-      return dishId + "::s=" + (state.size[dishId] || dish.sizes[0].id);
+    // Independent of the branches above — a dish could in principle have
+    // both a priced size AND a free side choice — so this is always appended
+    // rather than being its own exclusive branch.
+    if (dish.sideChoice) {
+      key += "::c=" + dishSideChoiceId(dishId, dish);
     }
-    return dishId;
+    return key;
   }
   function parseLineKey(key) {
     var parts = key.split("::");
@@ -1994,6 +2023,7 @@
       if (kv[0] === "b") meta.batchId = kv[1];
       if (kv[0] === "s") meta.sizeId = kv[1];
       if (kv[0] === "w") meta.windowId = kv[1];
+      if (kv[0] === "c") meta.sideChoiceId = kv[1];
     }
     return meta;
   }
@@ -2103,6 +2133,29 @@
     return wrap;
   }
 
+  // A plain, no-price-impact pick — visually the same pill-button row as
+  // variantToggle, but writes to state.sideChoice rather than state.variant
+  // so it can sit alongside a dish's other choices without colliding.
+  function sideChoiceToggle(dishId, dish) {
+    var wrap = document.createElement("div");
+    wrap.className = "size-toggle side-choice-toggle";
+    wrap.dataset.for = dishId;
+    dish.sideChoice.forEach(function (c) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.innerHTML = '<span class="sz-label">' + c.label + '</span>';
+      b.setAttribute("aria-pressed", dishSideChoiceId(dishId, dish) === c.id ? "true" : "false");
+      b.addEventListener("click", function () {
+        state.sideChoice[dishId] = c.id;
+        wrap.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
+        b.setAttribute("aria-pressed", "true");
+        onOrderChange();
+      });
+      wrap.appendChild(b);
+    });
+    return wrap;
+  }
+
   function batchToggle(dishId, dish) {
     var wrap = document.createElement("div");
     wrap.className = "size-toggle batch-toggle";
@@ -2184,6 +2237,7 @@
   function itemDisplayName(it) {
     var s = it.name;
     if (it.sizeLabel) s += " — " + it.sizeLabel;
+    if (it.sideChoiceLabel) s += " — " + it.sideChoiceLabel;
     if (it.addOns && it.addOns.length) s += " + " + it.addOns.map(function (a) { return a.label; }).join(", ");
     return s;
   }
@@ -2373,6 +2427,7 @@
           card.appendChild(variantToggle(dish.id, dish));
           card.appendChild(batchToggle(dish.id, dish));
         }
+        if (dish.sideChoice) card.appendChild(sideChoiceToggle(dish.id, dish));
 
         if (bulkDiscountEligible(dish.id)) {
           var bulkHint = document.createElement("div");
@@ -2424,6 +2479,7 @@
           price: priceForConfig(entry.dish, entry.tier.price, meta.variantId, meta.batchId, meta.sizeId, meta.dishId, q) + extra,
           addOns: addOns,
           sizeLabel: labelForConfig(entry.dish, meta.variantId, meta.batchId, meta.sizeId),
+          sideChoiceLabel: entry.dish.sideChoice ? sideChoiceLabelById(entry.dish, meta.sideChoiceId) : null,
           qty: q, window: meta.windowId || WINDOWS.list[0].id
         });
       }
@@ -3021,7 +3077,7 @@
   // order instead of the one that was just sent. justSent flips the empty
   // state's message (see renderOrder()) until the next item is added.
   function resetOrderAfterSend() {
-    state.qty = {}; state.window = {}; state.addOns = {}; state.size = {}; state.variant = {}; state.batch = {};
+    state.qty = {}; state.window = {}; state.addOns = {}; state.size = {}; state.variant = {}; state.batch = {}; state.sideChoice = {};
     document.getElementById("famFirstName").value = "";
     document.getElementById("famSurname").value = "";
     document.getElementById("famPhone").value = "";
